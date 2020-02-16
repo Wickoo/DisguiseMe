@@ -71,4 +71,12 @@ public class Disguise {
     public void setActualTexture(String actualTexture) {
         this.actualTexture = actualTexture;
     }
+
+    public void setActualName(String actualName) {
+        this.actualName = actualName;
+    }
+
+    public void setActualUUID(UUID actualUUID) {
+        this.actualUUID = actualUUID;
+    }
 }

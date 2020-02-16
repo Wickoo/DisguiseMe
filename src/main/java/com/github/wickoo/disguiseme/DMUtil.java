@@ -1,10 +1,12 @@
 package com.github.wickoo.disguiseme;
 
-import com.google.gson.*;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.UUID;
 
@@ -32,7 +34,7 @@ public class DMUtil {
             System.err.println("Could not get skin data from session servers!");
             player.sendMessage(DMUtil.chat("&c&lERROR! &7Server received too many requests!"));
             e.printStackTrace();
-            return null;
+            return new String[] {null};
         } catch (IllegalStateException e) {
             System.err.println("Player does not exist!");
             e.printStackTrace();

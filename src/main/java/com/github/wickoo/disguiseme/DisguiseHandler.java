@@ -10,6 +10,7 @@ import com.mojang.authlib.properties.PropertyMap;
 import net.minecraft.server.v1_15_R1.PacketPlayOutEntityDestroy;
 import net.minecraft.server.v1_15_R1.PacketPlayOutNamedEntitySpawn;
 import net.minecraft.server.v1_15_R1.PacketPlayOutPlayerInfo;
+import net.minecraft.server.v1_15_R1.PacketPlayOutSpawnEntityLiving;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_15_R1.entity.CraftPlayer;
@@ -26,15 +27,17 @@ public class DisguiseHandler {
     private DisguiseMe plugin;
 
     private Map<UUID, Disguise> disguisedPlayers;
-    private Map<UUID, GameProfile> cachedProfiles;
+    private Map<String, Disguise> cachedProfiles;
 
     private Inventory inv;
+    private Inventory cached;
 
     public DisguiseHandler (DisguiseMe plugin) {
         this.plugin = plugin;
-        disguisedPlayers = new HashMap<>();
+        this.disguisedPlayers = new HashMap<>();
         cachedProfiles = new HashMap<>();
         inv = Bukkit.createInventory(null, 36, DMUtil.chat("&b&lCurrent Disguised Players"));
+        cached = Bukkit.createInventory(null, 36, DMUtil.chat("&d&lCurrent Cached Disguises"));
     }
 
     public void setDisguiseSkin (Player player) {
@@ -90,6 +93,7 @@ public class DisguiseHandler {
             otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutEntityDestroy(player.getEntityId()));
             otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, disguisedCraftPlayer.getHandle()));
             otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutNamedEntitySpawn(disguisedCraftPlayer.getHandle()));
+            otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutSpawnEntityLiving(disguisedCraftPlayer.getHandle()));
 
         }
 
@@ -114,6 +118,7 @@ public class DisguiseHandler {
             otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutEntityDestroy(player.getEntityId()));
             otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, disguisedCraftPlayer.getHandle()));
             otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutNamedEntitySpawn(disguisedCraftPlayer.getHandle()));
+            otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutSpawnEntityLiving(disguisedCraftPlayer.getHandle()));
 
         }
 
@@ -195,6 +200,31 @@ public class DisguiseHandler {
 
     }
 
+    public void openCachedInv (Player player) {
+
+        cached.clear();
+
+        for (Map.Entry<String, Disguise> string : cachedProfiles.entrySet()) {
+
+            String disguiseName = string.getKey();
+            Disguise disguise = cachedProfiles.get(disguiseName);
+
+            ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
+            SkullMeta meta = (SkullMeta) skull.getItemMeta();
+            meta.setOwningPlayer(Bukkit.getOfflinePlayer(disguise.getDisguisedUUID()));
+            meta.setDisplayName(DMUtil.chat("&b&l" + disguise.getDisguisedName()));
+            List<String> lore = new ArrayList<>();
+            lore.add(0, DMUtil.chat("&r&fDisguise UUID: " + "&b&l" + disguise.getDisguisedUUID()));
+            meta.setLore(lore);
+            skull.setItemMeta(meta);
+            cached.addItem(skull);
+
+        }
+
+        player.openInventory(cached);
+
+    }
+
     public void addPacketListener (ProtocolManager manager) {
 
         manager.addPacketListener (new PacketAdapter(plugin, PacketType.Play.Server.PLAYER_INFO) {
@@ -226,6 +256,7 @@ public class DisguiseHandler {
                         return;
                     }
 
+                    setDisguiseSkin(event.getPlayer());
                     setDisguiseName(event.getPlayer());
 
                 }
@@ -233,11 +264,9 @@ public class DisguiseHandler {
             }
         });
 
-
-
     }
 
-    public Map<UUID, GameProfile> getCachedProfiles () {
+    public Map<String, Disguise> getCachedProfiles () {
         return cachedProfiles;
     }
 
@@ -253,8 +282,8 @@ public class DisguiseHandler {
         return disguisedPlayers.get(uuid);
     }
 
-    public void addToCachedProfiles (UUID uuid, GameProfile gameProfile) {
-        cachedProfiles.put(uuid, gameProfile);
+    public void addToCachedProfiles (String string, Disguise disguise) {
+        cachedProfiles.put(string, disguise);
     }
 
     public void addDisguised (UUID uuid, Disguise disguise) {

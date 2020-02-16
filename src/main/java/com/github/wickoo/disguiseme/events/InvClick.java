@@ -10,7 +10,7 @@ public class InvClick implements Listener {
     @EventHandler
     public void onClick (InventoryClickEvent e) {
 
-        if (!e.getView().getTitle().equals(DMUtil.chat("&b&lCurrent Disguised Players"))) {
+        if (!(e.getView().getTitle().equals(DMUtil.chat("&b&lCurrent Disguised Players")) || e.getView().getTitle().equals(DMUtil.chat("&d&lCurrent Cached Disguises")))) {
             return;
         }
         e.setCancelled(true);
