@@ -1,6 +1,9 @@
-package com.github.wickoo.disguiseme;
+package com.github.wickoo.disguiseme.commands;
 
-import com.github.wickoo.disguiseme.commands.*;
+import com.github.wickoo.disguiseme.Disguise;
+import com.github.wickoo.disguiseme.DisguiseMe;
+import com.github.wickoo.disguiseme.util.Utils;
+import com.github.wickoo.disguiseme.versions.DisguiseHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -14,14 +17,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class DMCommands implements CommandExecutor, TabExecutor {
+@SuppressWarnings("deprecation")
+public class CoreCMD implements CommandExecutor, TabExecutor {
 
     private DisguiseMe plugin;
     private DisguiseHandler handler;
 
     private List<CommandManager> commands;
 
-    public DMCommands (DisguiseMe plugin, DisguiseHandler handler) {
+    public CoreCMD(DisguiseMe plugin, DisguiseHandler handler) {
         this.plugin = plugin;
         this.handler = handler;
 
@@ -41,7 +45,7 @@ public class DMCommands implements CommandExecutor, TabExecutor {
         // /disguise
 
         if (!(sender instanceof Player)) {
-            sender.sendMessage(DMUtil.chat("Only a player can execute this command!"));
+            sender.sendMessage(Utils.chat("Only a player can execute this command!"));
             return true;
         }
 
@@ -51,12 +55,14 @@ public class DMCommands implements CommandExecutor, TabExecutor {
         switch (args.length) {
 
             default:
-                player.sendMessage(DMUtil.chat("&cIncorrect Usage! &7See /disguise help for proper implementations"));
+                player.sendMessage(Utils.chat("&cIncorrect Usage! &7See /disguise help for proper implementations"));
                 break;
 
             case 0:
 
-                player.sendMessage(DMUtil.chat("&b&lDisguiseMe &7by author &bWick_\n&bVersion: &7" + plugin.getDescription().getVersion() + "\n&bCommand: &7/disguise <command>"));
+                String version = Bukkit.getVersion().substring(Bukkit.getVersion().lastIndexOf(':') + 1).replace(')', ' ');
+                player.sendMessage(Utils.chat("&b&lDisguiseMe &7by author &bWick_\n&bPlugin Version: &7" +
+                        plugin.getDescription().getVersion() + "\n&bCommand: &7/disguise <command>" + "\n&bMinecraft Version:&7" + version));
                 return true;
 
             case 1:
@@ -67,7 +73,7 @@ public class DMCommands implements CommandExecutor, TabExecutor {
 
                     if (command.getName().equalsIgnoreCase(subcommand)) {
 
-                        command.executeCommand(player, handler, this);
+                        command.executeCommand(player, handler, this, args);
                         return true;
 
                     }
@@ -90,7 +96,7 @@ public class DMCommands implements CommandExecutor, TabExecutor {
                     cachedDisguise.setActualUUID(uuid);
                     handler.addDisguised(uuid, cachedDisguise);
                     handler.initiateDisguise(player);
-                    player.sendMessage(DMUtil.chat("&b&lSUCCESS! &r&7Now disguised as &b" + disguisedName + "&7!"));
+                    player.sendMessage(Utils.chat("&b&lSUCCESS! &r&7Now disguised as &b" + disguisedName + "&7!"));
                     return true;
 
                 }
@@ -99,10 +105,10 @@ public class DMCommands implements CommandExecutor, TabExecutor {
                     @Override
                     public void run() {
 
-                        String[] strings = DMUtil.fetch(disguisedUUID, player);
+                        String[] strings = Utils.fetch(disguisedUUID, player);
 
                         if (strings == null || strings.length == 0) {
-                            player.sendMessage(DMUtil.chat("&c&lERROR! &r&7Player &c" + disguisedName + "&7 not found!"));
+                            player.sendMessage(Utils.chat("&c&lERROR! &r&7Player &c" + disguisedName + "&7 not found!"));
                             return;
                         }
 
@@ -117,7 +123,7 @@ public class DMCommands implements CommandExecutor, TabExecutor {
                         disguise.setDisguisedTexture(texture);
                         handler.addDisguised(uuid, disguise);
                         handler.initiateDisguise(player);
-                        player.sendMessage(DMUtil.chat("&b&lSUCCESS! &r&7Now disguised as &b" + disguisedName + "&7!"));
+                        player.sendMessage(Utils.chat("&b&lSUCCESS! &r&7Now disguised as &b" + disguisedName + "&7!"));
                         handler.addToCachedProfiles(disguisedName, disguise);
 
                     }
@@ -130,28 +136,28 @@ public class DMCommands implements CommandExecutor, TabExecutor {
                 Player targetPlayer = Bukkit.getPlayer(args[0]);
 
                 if (!Bukkit.getOnlinePlayers().contains(targetPlayer)) {
-                    player.sendMessage(DMUtil.chat("&c&lERROR! &7Player &c" + targetPlayer.getDisplayName() + " &7not found!"));
+                    player.sendMessage(Utils.chat("&c&lERROR! &7Player &c" + targetPlayer.getDisplayName() + " &7not found!"));
                     return true;
                 }
 
                 String targetName = targetPlayer.getDisplayName();
                 UUID targetUUID = targetPlayer.getUniqueId();
-                String disguiseName = args[1];
-                UUID disguiseUUID = Bukkit.getOfflinePlayer(disguiseName).getUniqueId();
+                String disguisedName2 = args[1];
+                UUID disguisedUUID2 = Bukkit.getOfflinePlayer(disguisedName2).getUniqueId();
 
                 if (handler.isDisguised(targetUUID)) {
                     handler.clearDisguise(targetPlayer);
                     handler.removeDisguisedPlayer(targetUUID);
                 }
 
-                if (handler.getCachedProfiles().containsKey(disguiseName)) {
+                if (handler.getCachedProfiles().containsKey(disguisedName2)) {
 
-                    Disguise cachedDisguise = handler.getCachedProfiles().get(disguiseName);
+                    Disguise cachedDisguise = handler.getCachedProfiles().get(disguisedName2);
                     cachedDisguise.setActualName(targetName);
                     cachedDisguise.setActualUUID(targetUUID);
                     handler.addDisguised(targetUUID, cachedDisguise);
                     handler.initiateDisguise(player);
-                    player.sendMessage(DMUtil.chat("&b&lSUCCESS! &r&7Now disguised as &b" + disguiseName + "&7!"));
+                    player.sendMessage(Utils.chat("&b&lSUCCESS! &r&7Now disguised as &b" + disguisedName2 + "&7!"));
                     return true;
 
                 }
@@ -160,10 +166,10 @@ public class DMCommands implements CommandExecutor, TabExecutor {
                     @Override
                     public void run() {
 
-                        String[] strings = DMUtil.fetch(targetUUID, player);
+                        String[] strings = Utils.fetch(disguisedUUID2, player);
 
                         if (strings == null || strings.length == 0) {
-                            player.sendMessage(DMUtil.chat("&c&lERROR! &r&7Player '" + disguiseName + "&7' not found!"));
+                            player.sendMessage(Utils.chat("&c&lERROR! &r&7Player '" + disguisedName2 + "&7' not found!"));
                             return;
                         }
 
@@ -173,15 +179,15 @@ public class DMCommands implements CommandExecutor, TabExecutor {
 
                         String texture = strings[0];
                         String signature = strings[1];
-                        Disguise disguise = new Disguise(disguiseUUID, disguiseName, targetName, targetUUID);
+                        Disguise disguise = new Disguise(disguisedUUID2, disguisedName2, targetName, targetUUID);
                         disguise.setDisguisedSignature(signature);
                         disguise.setDisguisedTexture(texture);
                         handler.addDisguised(targetUUID, disguise);
                         handler.initiateDisguise(targetPlayer);
-                        handler.addToCachedProfiles(disguiseName, disguise);
+                        handler.addToCachedProfiles(disguisedName2, disguise);
 
-                        player.sendMessage(DMUtil.chat("&b&lSUCCESS! &r&7Disguised &b" + targetName + "&7 as &b" + disguiseName + "&7!"));
-                        targetPlayer.sendMessage(DMUtil.chat("&7You have been disguised as &b" + disguiseName + " &7by &b" + player.getDisplayName()));
+                        player.sendMessage(Utils.chat("&b&lSUCCESS! &r&7Disguised &b" + targetName + "&7 as &b" + disguisedName2 + "&7!"));
+                        targetPlayer.sendMessage(Utils.chat("&7You have been disguised as &b" + disguisedName2 + " &7by &b" + player.getDisplayName()));
 
                     }
                 }.runTaskAsynchronously(plugin);

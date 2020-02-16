@@ -1,7 +1,7 @@
 name: DisguiseMe
 version: ${project.version}
 main: com.github.wickoo.disguiseme.DisguiseMe
-api-version: 1.15
+api-version: 1.13
 description: Simple disguise plugin
 depend: [ProtocolLib]
 commands:

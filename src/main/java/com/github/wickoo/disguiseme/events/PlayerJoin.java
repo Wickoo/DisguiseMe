@@ -1,7 +1,7 @@
 package com.github.wickoo.disguiseme.events;
 
 import com.github.wickoo.disguiseme.Disguise;
-import com.github.wickoo.disguiseme.DisguiseHandler;
+import com.github.wickoo.disguiseme.versions.DisguiseHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

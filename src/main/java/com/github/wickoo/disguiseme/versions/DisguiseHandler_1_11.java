@@ -1,19 +1,19 @@
-package com.github.wickoo.disguiseme;
+package com.github.wickoo.disguiseme.versions;
 
-import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolManager;
-import com.comphenix.protocol.events.PacketAdapter;
-import com.comphenix.protocol.events.PacketEvent;
+import com.github.wickoo.disguiseme.Disguise;
+import com.github.wickoo.disguiseme.DisguiseMe;
+import com.github.wickoo.disguiseme.util.Utils;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
-import net.minecraft.server.v1_15_R1.PacketPlayOutEntityDestroy;
-import net.minecraft.server.v1_15_R1.PacketPlayOutNamedEntitySpawn;
-import net.minecraft.server.v1_15_R1.PacketPlayOutPlayerInfo;
-import net.minecraft.server.v1_15_R1.PacketPlayOutSpawnEntityLiving;
+import net.minecraft.server.v1_11_R1.PacketPlayOutEntityDestroy;
+import net.minecraft.server.v1_11_R1.PacketPlayOutNamedEntitySpawn;
+import net.minecraft.server.v1_11_R1.PacketPlayOutPlayerInfo;
+import net.minecraft.server.v1_11_R1.PacketPlayOutSpawnEntityLiving;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_11_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -22,9 +22,11 @@ import org.bukkit.inventory.meta.SkullMeta;
 import java.lang.reflect.Field;
 import java.util.*;
 
-public class DisguiseHandler {
+@SuppressWarnings("deprecation")
+public class DisguiseHandler_1_11 extends DisguiseHandler {
 
     private DisguiseMe plugin;
+    private ProtocolManager manager;
 
     private Map<UUID, Disguise> disguisedPlayers;
     private Map<String, Disguise> cachedProfiles;
@@ -32,12 +34,13 @@ public class DisguiseHandler {
     private Inventory inv;
     private Inventory cached;
 
-    public DisguiseHandler (DisguiseMe plugin) {
+    public DisguiseHandler_1_11 (DisguiseMe plugin, ProtocolManager manager) {
         this.plugin = plugin;
+        this.manager = manager;
         this.disguisedPlayers = new HashMap<>();
         cachedProfiles = new HashMap<>();
-        inv = Bukkit.createInventory(null, 36, DMUtil.chat("&b&lCurrent Disguised Players"));
-        cached = Bukkit.createInventory(null, 36, DMUtil.chat("&d&lCurrent Cached Disguises"));
+        inv = Bukkit.createInventory(null, 36, Utils.chat("&b&lCurrent Disguised Players"));
+        cached = Bukkit.createInventory(null, 36, Utils.chat("&d&lCurrent Cached Disguises"));
     }
 
     public void setDisguiseSkin (Player player) {
@@ -74,6 +77,7 @@ public class DisguiseHandler {
 
     }
 
+    @Override
     public void initiateDisguise (Player player) {
 
         setDisguiseSkin(player);
@@ -99,6 +103,7 @@ public class DisguiseHandler {
 
     }
 
+    @Override
     public void clearDisguise (Player player) {
 
         clearDisguisedName(player);
@@ -174,6 +179,7 @@ public class DisguiseHandler {
 
     }
 
+    @Override
     public void openDisguisedInv (Player player) {
 
         inv.clear();
@@ -183,13 +189,13 @@ public class DisguiseHandler {
             UUID actualUUID = uuid.getKey();
             Disguise disguise = disguisedPlayers.get(actualUUID);
 
-            ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
+            ItemStack skull = new ItemStack(Material.getMaterial("SKULL_ITEM"), 1, (short) 3);
             SkullMeta meta = (SkullMeta) skull.getItemMeta();
-            meta.setOwningPlayer(Bukkit.getOfflinePlayer(actualUUID));
-            meta.setDisplayName(DMUtil.chat("&b&l" + disguise.getActualName()));
+            meta.setOwner(disguise.getDisguisedName());
+            meta.setDisplayName(Utils.chat("&b&l" + disguise.getActualName()));
             List<String> lore = new ArrayList<>();
-            lore.add(0, DMUtil.chat("&r&fDisguised as: " + "&b&l" + disguise.getDisguisedName()));
-            lore.add(1, DMUtil.chat("&r&fDisguise UUID: " + "&b&l" + disguise.getDisguisedUUID()));
+            lore.add(0, Utils.chat("&r&fDisguised as: " + "&b&l" + disguise.getDisguisedName()));
+            lore.add(1, Utils.chat("&r&fDisguise UUID: " + "&b&l" + disguise.getDisguisedUUID()));
             meta.setLore(lore);
             skull.setItemMeta(meta);
             inv.addItem(skull);
@@ -200,6 +206,7 @@ public class DisguiseHandler {
 
     }
 
+    @Override
     public void openCachedInv (Player player) {
 
         cached.clear();
@@ -209,12 +216,12 @@ public class DisguiseHandler {
             String disguiseName = string.getKey();
             Disguise disguise = cachedProfiles.get(disguiseName);
 
-            ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
+            ItemStack skull = new ItemStack(Material.getMaterial("SKULL_ITEM"), 1, (short) 3);
             SkullMeta meta = (SkullMeta) skull.getItemMeta();
-            meta.setOwningPlayer(Bukkit.getOfflinePlayer(disguise.getDisguisedUUID()));
-            meta.setDisplayName(DMUtil.chat("&b&l" + disguise.getDisguisedName()));
+            meta.setOwner(disguise.getDisguisedName());
+            meta.setDisplayName(Utils.chat("&b&l" + disguise.getDisguisedName()));
             List<String> lore = new ArrayList<>();
-            lore.add(0, DMUtil.chat("&r&fDisguise UUID: " + "&b&l" + disguise.getDisguisedUUID()));
+            lore.add(0, Utils.chat("&r&fDisguise UUID: " + "&b&l" + disguise.getDisguisedUUID()));
             meta.setLore(lore);
             skull.setItemMeta(meta);
             cached.addItem(skull);
@@ -224,48 +231,6 @@ public class DisguiseHandler {
         player.openInventory(cached);
 
     }
-
-    public void addPacketListener (ProtocolManager manager) {
-
-        manager.addPacketListener (new PacketAdapter(plugin, PacketType.Play.Server.PLAYER_INFO) {
-            @Override
-            public void onPacketSending(PacketEvent event) {
-                // Item packets (id: 0x29)
-                if (event.getPacketType() == PacketType.Play.Server.PLAYER_INFO) {
-
-                    if(!isDisguised(event.getPlayer().getUniqueId())) {
-                        return;
-                    }
-
-                    Player player = event.getPlayer();
-
-                    setDisguiseSkin(player);
-                    setDisguiseName(player);
-                }
-
-            }
-        });
-
-        manager.addPacketListener (new PacketAdapter(plugin, PacketType.Play.Server.NAMED_ENTITY_SPAWN) {
-            @Override
-            public void onPacketSending(PacketEvent event) {
-                // Item packets (id: 0x29)
-                if (event.getPacketType() == PacketType.Play.Server.NAMED_ENTITY_SPAWN) {
-
-                    if (!isDisguised(event.getPlayer().getUniqueId())) {
-                        return;
-                    }
-
-                    setDisguiseSkin(event.getPlayer());
-                    setDisguiseName(event.getPlayer());
-
-                }
-
-            }
-        });
-
-    }
-
     public Map<String, Disguise> getCachedProfiles () {
         return cachedProfiles;
     }

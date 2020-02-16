@@ -2,8 +2,12 @@ package com.github.wickoo.disguiseme;
 
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
+import com.github.wickoo.disguiseme.commands.CoreCMD;
 import com.github.wickoo.disguiseme.events.InvClick;
 import com.github.wickoo.disguiseme.events.PlayerJoin;
+import com.github.wickoo.disguiseme.util.Utils;
+import com.github.wickoo.disguiseme.versions.DisguiseHandler;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class DisguiseMe extends JavaPlugin {
@@ -17,14 +21,19 @@ public final class DisguiseMe extends JavaPlugin {
     public void onEnable() {
 
         plugin = this;
-        disguiseHandler = new DisguiseHandler(plugin);
+        protocolManager = ProtocolLibrary.getProtocolManager();
+        disguiseHandler = Utils.getHandlerByVer(Bukkit.getVersion(), protocolManager, this);
 
-        this.getCommand("disguise").setExecutor(new DMCommands(plugin, disguiseHandler));
+        if (disguiseHandler == null) {
+            this.getPluginLoader().disablePlugin(this);
+            return;
+        }
+
+        this.getCommand("disguise").setExecutor(new CoreCMD(plugin, disguiseHandler));
         this.getServer().getPluginManager().registerEvents(new InvClick(), this);
         this.getServer().getPluginManager().registerEvents(new PlayerJoin(disguiseHandler), this);
 
-        protocolManager = ProtocolLibrary.getProtocolManager();
-        disguiseHandler.addPacketListener(protocolManager);
+        disguiseHandler.addPacketListener(protocolManager, this);
 
     }
 

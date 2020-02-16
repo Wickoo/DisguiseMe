@@ -1,7 +1,6 @@
 package com.github.wickoo.disguiseme.commands;
 
-import com.github.wickoo.disguiseme.DMCommands;
-import com.github.wickoo.disguiseme.DisguiseHandler;
+import com.github.wickoo.disguiseme.versions.DisguiseHandler;
 import org.bukkit.entity.Player;
 
 public class CachedCMD implements CommandManager {
@@ -22,7 +21,7 @@ public class CachedCMD implements CommandManager {
     }
 
     @Override
-    public void executeCommand(Player player, DisguiseHandler disguiseHandler, DMCommands core) {
+    public void executeCommand(Player player, DisguiseHandler disguiseHandler, CoreCMD core, String[] args) {
         disguiseHandler.openCachedInv(player);
     }
 

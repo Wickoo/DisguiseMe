@@ -3,26 +3,26 @@ package com.github.wickoo.disguiseme.commands;
 import com.github.wickoo.disguiseme.versions.DisguiseHandler;
 import org.bukkit.entity.Player;
 
-public class ListCMD implements CommandManager {
+public class FixCMD implements CommandManager {
 
     @Override
     public String getName() {
-        return "list";
+        return "fix";
     }
 
     @Override
     public String getPermission() {
-        return "disguiseme.list";
+        return "disguiseme.fix";
     }
 
     @Override
     public String getDescription() {
-        return "List of all currently disguised players";
+        return "Fixes disguise";
     }
 
     @Override
     public void executeCommand(Player player, DisguiseHandler disguiseHandler, CoreCMD core, String[] args) {
-        disguiseHandler.openDisguisedInv(player);
+        disguiseHandler.initiateDisguise(player);
     }
 
 }

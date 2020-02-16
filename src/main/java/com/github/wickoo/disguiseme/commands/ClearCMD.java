@@ -1,8 +1,8 @@
 package com.github.wickoo.disguiseme.commands;
 
-import com.github.wickoo.disguiseme.DMCommands;
-import com.github.wickoo.disguiseme.DMUtil;
-import com.github.wickoo.disguiseme.DisguiseHandler;
+import com.github.wickoo.disguiseme.util.Utils;
+import com.github.wickoo.disguiseme.versions.DisguiseHandler;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 public class ClearCMD implements CommandManager {
@@ -23,14 +23,34 @@ public class ClearCMD implements CommandManager {
     }
 
     @Override
-    public void executeCommand(Player player, DisguiseHandler disguiseHandler, DMCommands core) {
+    public void executeCommand(Player player, DisguiseHandler disguiseHandler, CoreCMD core, String[] args) {
+
+        if (args.length == 2) {
+
+            Player targetPlayer = Bukkit.getPlayer(args[1]);
+            if (targetPlayer == null) {
+                player.sendMessage(Utils.chat("&c&lERROR! &7Player &c " + args[1] + " &7not found!"));
+                return;
+            }
+
+            if (!disguiseHandler.isDisguised(player.getUniqueId())) {
+                player.sendMessage(Utils.chat("&c&lERROR! &7Player &c" + args[1] + " &7is not disguised!"));
+            }
+
+            disguiseHandler.clearDisguise(player);
+            disguiseHandler.removeDisguisedPlayer(player.getUniqueId());
+            player.sendMessage(Utils.chat("&b&lSUCCESS! &7Player &b" + args[1] + " &7is no longer disguised!"));
+            return;
+
+        }
+
         if (!disguiseHandler.isDisguised(player.getUniqueId())) {
-            player.sendMessage(DMUtil.chat("&c&lERROR! &7You are not disguised!"));
+            player.sendMessage(Utils.chat("&c&lERROR! &7You are not disguised!"));
         }
 
         disguiseHandler.clearDisguise(player);
         disguiseHandler.removeDisguisedPlayer(player.getUniqueId());
-        player.sendMessage(DMUtil.chat("&b&lSUCCESS! &7You are no longer disguised!"));
+        player.sendMessage(Utils.chat("&b&lSUCCESS! &7You are no longer disguised!"));
     }
 
 }

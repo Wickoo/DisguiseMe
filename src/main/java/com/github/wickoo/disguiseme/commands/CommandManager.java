@@ -1,7 +1,6 @@
 package com.github.wickoo.disguiseme.commands;
 
-import com.github.wickoo.disguiseme.DMCommands;
-import com.github.wickoo.disguiseme.DisguiseHandler;
+import com.github.wickoo.disguiseme.versions.DisguiseHandler;
 import org.bukkit.entity.Player;
 
 public interface CommandManager {
@@ -9,6 +8,6 @@ public interface CommandManager {
     String getName ();
     String getPermission ();
     String getDescription();
-    void executeCommand (Player player, DisguiseHandler disguiseHandler, DMCommands core);
+    void executeCommand (Player player, DisguiseHandler disguiseHandler, CoreCMD core, String[] args);
 
 }
