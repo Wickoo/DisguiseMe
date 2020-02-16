@@ -1,0 +1,11 @@
+name: DisguiseMe
+version: ${project.version}
+main: com.github.wickoo.disguiseme.DisguiseMe
+api-version: 1.15
+description: Simple disguise plugin
+depend: [ProtocolLib]
+commands:
+  disguise:
+    description: Disguise command
+    usage: /disguise <player>
+    aliases: [dis, d]

@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="DisguiseMe:jar">
+    <output-path>$USER_HOME$/Desktop/Coding/Plugins</output-path>
+    <root id="archive" name="DisguiseMe.jar">
+      <element id="module-output" name="DisguiseMe" />
+    </root>
+  </artifact>
+</component>
