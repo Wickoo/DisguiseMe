@@ -27,9 +27,9 @@ public class HelpCMD implements CommandManager {
     public void executeCommand(Player player, DisguiseHandler disguiseHandler, CoreCMD core, String[] args) {
         List<CommandManager> commands = core.getCommands();
 
-        for (int i = 0; i < commands.size(); i++) {
+        for (CommandManager command : commands) {
 
-            player.sendMessage(Utils.chat("&b/disguise " + commands.get(i).getName() + "\n&7 - " + commands.get(i).getDescription()));
+            player.sendMessage(Utils.chat("&b/disguise " + command.getName() + "\n&7 - " + command.getDescription()));
 
         }
 

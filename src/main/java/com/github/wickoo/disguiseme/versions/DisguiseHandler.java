@@ -6,8 +6,12 @@ import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
 import com.github.wickoo.disguiseme.Disguise;
 import com.github.wickoo.disguiseme.DisguiseMe;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.meta.SkullMeta;
 
+import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.UUID;
 
@@ -28,6 +32,24 @@ public abstract class DisguiseHandler {
     public void openDisguisedInv (Player player) { }
 
     public void openCachedInv (Player player) { }
+
+    public void setSkin (SkullMeta meta, String texture) {
+
+        GameProfile profile = new GameProfile(UUID.randomUUID(), null);
+        profile.getProperties().put("textures", new Property("textures", texture));
+        Field profileField = null;
+        try {
+            profileField = meta.getClass().getDeclaredField("profile");
+        } catch (NoSuchFieldException | SecurityException e) {
+            e.printStackTrace();
+        }
+        profileField.setAccessible(true);
+        try {
+            profileField.set(meta, profile);
+        } catch (IllegalArgumentException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
 
     public void addPacketListener (ProtocolManager manager, DisguiseMe plugin) {
 

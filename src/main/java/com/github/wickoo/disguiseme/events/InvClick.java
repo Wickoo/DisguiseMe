@@ -7,6 +7,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 
 public class InvClick implements Listener {
 
+    
     @EventHandler
     public void onClick (InventoryClickEvent e) {
 

@@ -35,6 +35,7 @@ public class CoreCMD implements CommandExecutor, TabExecutor {
         commands.add(new ListCMD());
         commands.add(new ClearCMD());
         commands.add(new CachedCMD());
+        commands.add(new FixCMD());
     }
 
     @Override
@@ -208,9 +209,9 @@ public class CoreCMD implements CommandExecutor, TabExecutor {
 
             if (args.length == 1) {
 
-                for (int i = 0; i <commands.size(); i++) {
+                for (CommandManager commandManager : commands) {
 
-                    autoCompletes.add(commands.get(i).getName());
+                    autoCompletes.add(commandManager.getName());
 
                 }
 

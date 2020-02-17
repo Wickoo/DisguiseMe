@@ -43,6 +43,7 @@ public class DisguiseHandler_1_8 extends DisguiseHandler {
         cached = Bukkit.createInventory(null, 36, Utils.chat("&d&lCurrent Cached Disguises"));
     }
 
+    @Override
     public void setDisguiseSkin (Player player) {
 
         CraftPlayer craftPlayer = (CraftPlayer) player;
@@ -61,6 +62,7 @@ public class DisguiseHandler_1_8 extends DisguiseHandler {
 
     }
 
+    @Override
     public void clearDisguiseSkin (Player player) {
 
         CraftPlayer craftPlayer = (CraftPlayer) player;
@@ -129,6 +131,7 @@ public class DisguiseHandler_1_8 extends DisguiseHandler {
 
     }
 
+    @Override
     public void setDisguiseName (Player player) {
 
         CraftPlayer craftPlayer = (CraftPlayer) player;
@@ -154,6 +157,7 @@ public class DisguiseHandler_1_8 extends DisguiseHandler {
 
     }
 
+    @Override
     public void clearDisguisedName (Player player) {
 
         CraftPlayer craftPlayer = (CraftPlayer) player;
@@ -180,6 +184,11 @@ public class DisguiseHandler_1_8 extends DisguiseHandler {
     }
 
     @Override
+    public void addPacketListener (ProtocolManager manager, DisguiseMe plugin) {
+        super.addPacketListener(this.manager, this.plugin);
+    }
+
+    @Override
     public void openDisguisedInv (Player player) {
 
         inv.clear();
@@ -191,7 +200,7 @@ public class DisguiseHandler_1_8 extends DisguiseHandler {
 
             ItemStack skull = new ItemStack(Material.getMaterial("SKULL_ITEM"), 1, (short) 3);
             SkullMeta meta = (SkullMeta) skull.getItemMeta();
-            meta.setOwner(disguise.getDisguisedName());
+            setSkin(meta, disguise.getDisguisedTexture());
             meta.setDisplayName(Utils.chat("&b&l" + disguise.getActualName()));
             List<String> lore = new ArrayList<>();
             lore.add(0, Utils.chat("&r&fDisguised as: " + "&b&l" + disguise.getDisguisedName()));
@@ -206,6 +215,7 @@ public class DisguiseHandler_1_8 extends DisguiseHandler {
 
     }
 
+    @Override
     public void openCachedInv (Player player) {
 
         cached.clear();
@@ -217,7 +227,7 @@ public class DisguiseHandler_1_8 extends DisguiseHandler {
 
             ItemStack skull = new ItemStack(Material.getMaterial("SKULL_ITEM"), 1, (short) 3);
             SkullMeta meta = (SkullMeta) skull.getItemMeta();
-            meta.setOwner(disguise.getDisguisedName());
+            setSkin(meta, disguise.getDisguisedTexture());
             meta.setDisplayName(Utils.chat("&b&l" + disguise.getDisguisedName()));
             List<String> lore = new ArrayList<>();
             lore.add(0, Utils.chat("&r&fDisguise UUID: " + "&b&l" + disguise.getDisguisedUUID()));
@@ -231,30 +241,33 @@ public class DisguiseHandler_1_8 extends DisguiseHandler {
 
     }
 
+    @Override
+    public void setSkin (SkullMeta meta, String texture) { super.setSkin(meta, texture); }
+
+    @Override
     public Map<String, Disguise> getCachedProfiles () {
         return cachedProfiles;
     }
 
-    public boolean isDisguised (UUID uuid) {
-        if (disguisedPlayers.containsKey(uuid)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
+    @Override
+    public boolean isDisguised (UUID uuid) { return disguisedPlayers.containsKey(uuid); }
 
+    @Override
     public Disguise getDisguisedPlayer (UUID uuid) {
         return disguisedPlayers.get(uuid);
     }
 
+    @Override
     public void addToCachedProfiles (String string, Disguise disguise) {
         cachedProfiles.put(string, disguise);
     }
 
+    @Override
     public void addDisguised (UUID uuid, Disguise disguise) {
         disguisedPlayers.put(uuid, disguise);
     }
 
+    @Override
     public void removeDisguisedPlayer (UUID uuid) {
         disguisedPlayers.remove(uuid);
     }

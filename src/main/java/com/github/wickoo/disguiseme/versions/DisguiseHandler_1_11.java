@@ -180,6 +180,11 @@ public class DisguiseHandler_1_11 extends DisguiseHandler {
     }
 
     @Override
+    public void addPacketListener (ProtocolManager manager, DisguiseMe plugin) {
+        super.addPacketListener(this.manager, this.plugin);
+    }
+
+    @Override
     public void openDisguisedInv (Player player) {
 
         inv.clear();
@@ -191,7 +196,7 @@ public class DisguiseHandler_1_11 extends DisguiseHandler {
 
             ItemStack skull = new ItemStack(Material.getMaterial("SKULL_ITEM"), 1, (short) 3);
             SkullMeta meta = (SkullMeta) skull.getItemMeta();
-            meta.setOwner(disguise.getDisguisedName());
+            setSkin(meta, disguise.getDisguisedTexture());
             meta.setDisplayName(Utils.chat("&b&l" + disguise.getActualName()));
             List<String> lore = new ArrayList<>();
             lore.add(0, Utils.chat("&r&fDisguised as: " + "&b&l" + disguise.getDisguisedName()));
@@ -218,7 +223,7 @@ public class DisguiseHandler_1_11 extends DisguiseHandler {
 
             ItemStack skull = new ItemStack(Material.getMaterial("SKULL_ITEM"), 1, (short) 3);
             SkullMeta meta = (SkullMeta) skull.getItemMeta();
-            meta.setOwner(disguise.getDisguisedName());
+            setSkin(meta, disguise.getDisguisedTexture());
             meta.setDisplayName(Utils.chat("&b&l" + disguise.getDisguisedName()));
             List<String> lore = new ArrayList<>();
             lore.add(0, Utils.chat("&r&fDisguise UUID: " + "&b&l" + disguise.getDisguisedUUID()));
@@ -231,16 +236,18 @@ public class DisguiseHandler_1_11 extends DisguiseHandler {
         player.openInventory(cached);
 
     }
+
+    @Override
+    public void setSkin (SkullMeta meta, String texture) {
+        super.setSkin(meta, texture);
+    }
+
     public Map<String, Disguise> getCachedProfiles () {
         return cachedProfiles;
     }
 
     public boolean isDisguised (UUID uuid) {
-        if (disguisedPlayers.containsKey(uuid)) {
-            return true;
-        } else {
-            return false;
-        }
+        return disguisedPlayers.containsKey(uuid);
     }
 
     public Disguise getDisguisedPlayer (UUID uuid) {
