@@ -10,8 +10,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,15 +33,10 @@ public class CoreCMD implements CommandExecutor, TabExecutor {
         commands.add(new ListCMD());
         commands.add(new ClearCMD());
         commands.add(new CachedCMD());
-        commands.add(new FixCMD());
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command basecommand, String label, String[] args) {
-
-        // /disguise <name>
-        // /disguise <target> <name>
-        // /disguise
 
         if (!(sender instanceof Player)) {
             sender.sendMessage(Utils.chat("Only a player can execute this command!"));
@@ -102,33 +95,7 @@ public class CoreCMD implements CommandExecutor, TabExecutor {
 
                 }
 
-                BukkitTask task = new BukkitRunnable() {
-                    @Override
-                    public void run() {
-
-                        String[] strings = Utils.fetch(disguisedUUID, player);
-
-                        if (strings == null || strings.length == 0) {
-                            player.sendMessage(Utils.chat("&c&lERROR! &r&7Player &c" + disguisedName + "&7 not found!"));
-                            return;
-                        }
-
-                        if (strings[0] == null) {
-                            return;
-                        }
-
-                        String texture = strings[0];
-                        String signature = strings[1];
-                        Disguise disguise = new Disguise(disguisedUUID, disguisedName, actualName, uuid);
-                        disguise.setDisguisedSignature(signature);
-                        disguise.setDisguisedTexture(texture);
-                        handler.addDisguised(uuid, disguise);
-                        handler.initiateDisguise(player);
-                        player.sendMessage(Utils.chat("&b&lSUCCESS! &r&7Now disguised as &b" + disguisedName + "&7!"));
-                        handler.addToCachedProfiles(disguisedName, disguise);
-
-                    }
-                }.runTaskAsynchronously(plugin);
+                handler.asyncDisguise(player, disguisedUUID, uuid, disguisedName, actualName, plugin);
 
                 return true;
 
@@ -137,7 +104,7 @@ public class CoreCMD implements CommandExecutor, TabExecutor {
                 Player targetPlayer = Bukkit.getPlayer(args[0]);
 
                 if (!Bukkit.getOnlinePlayers().contains(targetPlayer)) {
-                    player.sendMessage(Utils.chat("&c&lERROR! &7Player &c" + targetPlayer.getDisplayName() + " &7not found!"));
+                    player.sendMessage(Utils.chat("&c&lERROR! &7Player &c" + args[0] + " &7not found!"));
                     return true;
                 }
 
@@ -163,35 +130,7 @@ public class CoreCMD implements CommandExecutor, TabExecutor {
 
                 }
 
-                BukkitTask task2 = new BukkitRunnable() {
-                    @Override
-                    public void run() {
-
-                        String[] strings = Utils.fetch(disguisedUUID2, player);
-
-                        if (strings == null || strings.length == 0) {
-                            player.sendMessage(Utils.chat("&c&lERROR! &r&7Player '" + disguisedName2 + "&7' not found!"));
-                            return;
-                        }
-
-                        if (strings[0] == null) {
-                            return;
-                        }
-
-                        String texture = strings[0];
-                        String signature = strings[1];
-                        Disguise disguise = new Disguise(disguisedUUID2, disguisedName2, targetName, targetUUID);
-                        disguise.setDisguisedSignature(signature);
-                        disguise.setDisguisedTexture(texture);
-                        handler.addDisguised(targetUUID, disguise);
-                        handler.initiateDisguise(targetPlayer);
-                        handler.addToCachedProfiles(disguisedName2, disguise);
-
-                        player.sendMessage(Utils.chat("&b&lSUCCESS! &r&7Disguised &b" + targetName + "&7 as &b" + disguisedName2 + "&7!"));
-                        targetPlayer.sendMessage(Utils.chat("&7You have been disguised as &b" + disguisedName2 + " &7by &b" + player.getDisplayName()));
-
-                    }
-                }.runTaskAsynchronously(plugin);
+                handler.asyncDisguise(targetPlayer, disguisedUUID2, targetUUID, disguisedName2, targetName, plugin);
                 break;
 
         }

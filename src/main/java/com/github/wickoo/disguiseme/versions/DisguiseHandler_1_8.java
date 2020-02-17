@@ -18,6 +18,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -86,22 +88,29 @@ public class DisguiseHandler_1_8 extends DisguiseHandler {
         setDisguiseName(player);
         player.setDisplayName(disguisedPlayers.get(player.getUniqueId()).getDisguisedName());
 
-        for (Player otherPlayer : Bukkit.getOnlinePlayers()) {
+        BukkitTask task = new BukkitRunnable() {
+            @Override
+            public void run() {
 
-            if (otherPlayer.getUniqueId() == player.getUniqueId()) {
-                return;
+                for (Player otherPlayer : Bukkit.getOnlinePlayers()) {
+
+                    if (otherPlayer.getUniqueId() == player.getUniqueId()) {
+                        continue;
+                    }
+
+                    CraftPlayer otherCraftPlayer = (CraftPlayer) otherPlayer;
+                    CraftPlayer disguisedCraftPlayer = (CraftPlayer) player;
+
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, disguisedCraftPlayer.getHandle()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutEntityDestroy(disguisedCraftPlayer.getEntityId()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, disguisedCraftPlayer.getHandle()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutNamedEntitySpawn(disguisedCraftPlayer.getHandle()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutSpawnEntityLiving(disguisedCraftPlayer.getHandle()));
+
+                }
+
             }
-
-            CraftPlayer otherCraftPlayer = (CraftPlayer) otherPlayer;
-            CraftPlayer disguisedCraftPlayer = (CraftPlayer) player;
-
-            otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, disguisedCraftPlayer.getHandle()));
-            otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutEntityDestroy(player.getEntityId()));
-            otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, disguisedCraftPlayer.getHandle()));
-            otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutNamedEntitySpawn(disguisedCraftPlayer.getHandle()));
-            otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutSpawnEntityLiving(disguisedCraftPlayer.getHandle()));
-
-        }
+        }.runTaskLater(plugin, 20);
 
     }
 
@@ -112,24 +121,32 @@ public class DisguiseHandler_1_8 extends DisguiseHandler {
         clearDisguiseSkin(player);
         player.setDisplayName(disguisedPlayers.get(player.getUniqueId()).getActualName());
 
-        for (Player otherPlayer : Bukkit.getOnlinePlayers()) {
+        BukkitTask task = new BukkitRunnable() {
+            @Override
+            public void run() {
 
-            if (otherPlayer.getUniqueId() == player.getUniqueId()) {
-                return;
+                for (Player otherPlayer : Bukkit.getOnlinePlayers()) {
+
+                    if (otherPlayer.getUniqueId() == player.getUniqueId()) {
+                        continue;
+                    }
+
+                    CraftPlayer otherCraftPlayer = (CraftPlayer) otherPlayer;
+                    CraftPlayer disguisedCraftPlayer = (CraftPlayer) player;
+
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, disguisedCraftPlayer.getHandle()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutEntityDestroy(disguisedCraftPlayer.getEntityId()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, disguisedCraftPlayer.getHandle()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutNamedEntitySpawn(disguisedCraftPlayer.getHandle()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutSpawnEntityLiving(disguisedCraftPlayer.getHandle()));
+
+                }
+
             }
-
-            CraftPlayer otherCraftPlayer = (CraftPlayer) otherPlayer;
-            CraftPlayer disguisedCraftPlayer = (CraftPlayer) player;
-
-            otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, disguisedCraftPlayer.getHandle()));
-            otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutEntityDestroy(player.getEntityId()));
-            otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, disguisedCraftPlayer.getHandle()));
-            otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutNamedEntitySpawn(disguisedCraftPlayer.getHandle()));
-            otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutSpawnEntityLiving(disguisedCraftPlayer.getHandle()));
-
-        }
+        }.runTaskLater(plugin, 20);
 
     }
+
 
     @Override
     public void setDisguiseName (Player player) {
@@ -152,7 +169,6 @@ public class DisguiseHandler_1_8 extends DisguiseHandler {
             field.set(gameProfile, disguise.getDisguisedName());
         } catch (IllegalAccessException e) {
             e.printStackTrace();
-            return;
         }
 
     }
@@ -178,14 +194,8 @@ public class DisguiseHandler_1_8 extends DisguiseHandler {
             field.set(gameProfile, disguise.getActualName());
         } catch (IllegalAccessException e) {
             e.printStackTrace();
-            return;
         }
 
-    }
-
-    @Override
-    public void addPacketListener (ProtocolManager manager, DisguiseMe plugin) {
-        super.addPacketListener(this.manager, this.plugin);
     }
 
     @Override
@@ -239,6 +249,11 @@ public class DisguiseHandler_1_8 extends DisguiseHandler {
 
         player.openInventory(cached);
 
+    }
+
+    @Override
+    public void asyncDisguise(Player disguiseTarget, UUID disguisedUUID, UUID actualUUID, String disguisedName, String actualName, DisguiseMe plugin) {
+        super.asyncDisguise(disguiseTarget, disguisedUUID, actualUUID, disguisedName, actualName, plugin);
     }
 
     @Override

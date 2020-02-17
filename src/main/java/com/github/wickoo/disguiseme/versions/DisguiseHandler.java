@@ -6,10 +6,14 @@ import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
 import com.github.wickoo.disguiseme.Disguise;
 import com.github.wickoo.disguiseme.DisguiseMe;
+import com.github.wickoo.disguiseme.util.Utils;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -65,6 +69,8 @@ public abstract class DisguiseHandler {
 
                     Player player = event.getPlayer();
 
+                    Bukkit.broadcastMessage("YAY!!!!");
+
                     setDisguiseSkin(player);
                     setDisguiseName(player);
                 }
@@ -82,6 +88,8 @@ public abstract class DisguiseHandler {
                         return;
                     }
 
+                    Bukkit.broadcastMessage("YAY");
+
                     setDisguiseSkin(event.getPlayer());
                     setDisguiseName(event.getPlayer());
 
@@ -89,6 +97,39 @@ public abstract class DisguiseHandler {
 
             }
         });
+
+    }
+
+    public void asyncDisguise (Player disguiseTarget, UUID disguisedUUID, UUID actualUUID, String disguisedName, String actualName, DisguiseMe plugin) {
+
+        BukkitTask task = new BukkitRunnable() {
+            @Override
+            public void run() {
+
+                String[] strings = Utils.fetch(disguisedUUID, disguiseTarget);
+
+                if (strings == null || strings.length == 0) {
+                    disguiseTarget.sendMessage(Utils.chat("&c&lERROR! &r&7Player &c" + disguisedName + "&7 not found!"));
+                    return;
+                }
+
+                if (strings[0] == null) {
+                    return;
+                }
+
+                String texture = strings[0];
+                String signature = strings[1];
+                Disguise disguise = new Disguise(disguisedUUID, disguisedName, actualName, actualUUID);
+                disguise.setDisguisedSignature(signature);
+                disguise.setDisguisedTexture(texture);
+                addDisguised(actualUUID, disguise);
+                initiateDisguise(disguiseTarget);
+                addToCachedProfiles(disguisedName, disguise);
+
+            }
+        }.runTaskAsynchronously(plugin);
+
+        disguiseTarget.sendMessage(Utils.chat("&b&lSUCCESS! &r&7Now disguised as &b" + disguisedName + "&7!"));
 
     }
 
