@@ -1,6 +1,7 @@
 package com.github.wickoo.disguiseme.commands;
 
 import com.github.wickoo.disguiseme.Disguise;
+import com.github.wickoo.disguiseme.DisguiseMe;
 import com.github.wickoo.disguiseme.util.Utils;
 import com.github.wickoo.disguiseme.versions.DisguiseHandler;
 import org.bukkit.entity.Player;
@@ -20,12 +21,17 @@ public class ShowCMD implements CommandManager {
     }
 
     @Override
+    public String getAdditionalArgs() {
+        return "";
+    }
+
+    @Override
     public String getDescription() {
         return "Returns current disguise (if present)";
     }
 
     @Override
-    public void executeCommand(Player player, DisguiseHandler disguiseHandler, CoreCMD core, String[] args) {
+    public void executeCommand(Player player, DisguiseHandler disguiseHandler, CoreCMD core, String[] args, DisguiseMe plugin) {
         UUID uuid = player.getUniqueId();
         if (!disguiseHandler.isDisguised(uuid)) {
             player.sendMessage(Utils.chat("&c&lERROR! &7You are not disguised!"));

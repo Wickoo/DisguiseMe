@@ -45,8 +45,7 @@ public class DisguiseHandler_1_8 extends DisguiseHandler {
         cached = Bukkit.createInventory(null, 36, Utils.chat("&d&lCurrent Cached Disguises"));
     }
 
-    @Override
-    public void setDisguiseSkin (Player player) {
+    public void setDisguiseSkin (Player player)  {
 
         CraftPlayer craftPlayer = (CraftPlayer) player;
         GameProfile gameProfile = craftPlayer.getProfile();
@@ -240,7 +239,7 @@ public class DisguiseHandler_1_8 extends DisguiseHandler {
             setSkin(meta, disguise.getDisguisedTexture());
             meta.setDisplayName(Utils.chat("&b&l" + disguise.getDisguisedName()));
             List<String> lore = new ArrayList<>();
-            lore.add(0, Utils.chat("&r&fDisguise UUID: " + "&b&l" + disguise.getDisguisedUUID()));
+            lore.add(0, Utils.chat("&r&fUUID: " + "&b&l" + disguise.getDisguisedUUID()));
             meta.setLore(lore);
             skull.setItemMeta(meta);
             cached.addItem(skull);
@@ -249,6 +248,11 @@ public class DisguiseHandler_1_8 extends DisguiseHandler {
 
         player.openInventory(cached);
 
+    }
+
+    @Override
+    public void setCachedDisguise(String name, Player player) {
+        super.setCachedDisguise(name, player);
     }
 
     @Override
@@ -262,6 +266,11 @@ public class DisguiseHandler_1_8 extends DisguiseHandler {
     @Override
     public Map<String, Disguise> getCachedProfiles () {
         return cachedProfiles;
+    }
+
+    @Override
+    public Map<UUID, Disguise> getDisguisedPlayers () {
+        return disguisedPlayers;
     }
 
     @Override

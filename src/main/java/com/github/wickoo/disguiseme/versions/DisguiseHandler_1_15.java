@@ -95,14 +95,14 @@ public class DisguiseHandler_1_15 extends DisguiseHandler {
                         continue;
                     }
 
-                    org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer otherCraftPlayer = (org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer) otherPlayer;
-                    org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer disguisedCraftPlayer = (org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer) player;
+                    CraftPlayer otherCraftPlayer = (CraftPlayer) otherPlayer;
+                    CraftPlayer disguisedCraftPlayer = (CraftPlayer) player;
 
-                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new net.minecraft.server.v1_8_R3.PacketPlayOutPlayerInfo(net.minecraft.server.v1_8_R3.PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, disguisedCraftPlayer.getHandle()));
-                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new net.minecraft.server.v1_8_R3.PacketPlayOutEntityDestroy(disguisedCraftPlayer.getEntityId()));
-                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new net.minecraft.server.v1_8_R3.PacketPlayOutPlayerInfo(net.minecraft.server.v1_8_R3.PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, disguisedCraftPlayer.getHandle()));
-                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new net.minecraft.server.v1_8_R3.PacketPlayOutNamedEntitySpawn(disguisedCraftPlayer.getHandle()));
-                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new net.minecraft.server.v1_8_R3.PacketPlayOutSpawnEntityLiving(disguisedCraftPlayer.getHandle()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, disguisedCraftPlayer.getHandle()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutEntityDestroy(disguisedCraftPlayer.getEntityId()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, disguisedCraftPlayer.getHandle()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutNamedEntitySpawn(disguisedCraftPlayer.getHandle()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutSpawnEntityLiving(disguisedCraftPlayer.getHandle()));
 
                 }
 
@@ -234,7 +234,7 @@ public class DisguiseHandler_1_15 extends DisguiseHandler {
             setSkin(meta, disguise.getDisguisedTexture());
             meta.setDisplayName(Utils.chat("&b&l" + disguise.getDisguisedName()));
             List<String> lore = new ArrayList<>();
-            lore.add(0, Utils.chat("&r&fDisguise UUID: " + "&b&l" + disguise.getDisguisedUUID()));
+            lore.add(0, Utils.chat("&r&fUUID: " + "&b&l" + disguise.getDisguisedUUID()));
             meta.setLore(lore);
             skull.setItemMeta(meta);
             cached.addItem(skull);
@@ -243,6 +243,11 @@ public class DisguiseHandler_1_15 extends DisguiseHandler {
 
         player.openInventory(cached);
 
+    }
+
+    @Override
+    public void setCachedDisguise(String name, Player player) {
+        super.setCachedDisguise(name, player);
     }
 
     @Override
@@ -257,6 +262,11 @@ public class DisguiseHandler_1_15 extends DisguiseHandler {
 
     public Map<String, Disguise> getCachedProfiles () {
         return cachedProfiles;
+    }
+
+    @Override
+    public Map<UUID, Disguise> getDisguisedPlayers () {
+        return disguisedPlayers;
     }
 
     public boolean isDisguised (UUID uuid) {

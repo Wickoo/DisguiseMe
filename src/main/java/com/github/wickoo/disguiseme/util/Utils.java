@@ -5,6 +5,7 @@ import com.github.wickoo.disguiseme.DisguiseMe;
 import com.github.wickoo.disguiseme.versions.*;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
@@ -14,6 +15,11 @@ import java.net.URL;
 import java.util.UUID;
 
 public class Utils {
+
+    public static String getPackageVersion () {
+        String nmsver = Bukkit.getServer().getClass().getPackage().getName();
+        return nmsver.substring(nmsver.lastIndexOf(".") + 1);
+    }
 
     public static String chat (String s) {
         return ChatColor.translateAlternateColorCodes('&',s);

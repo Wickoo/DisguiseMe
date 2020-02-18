@@ -1,5 +1,6 @@
 package com.github.wickoo.disguiseme.commands;
 
+import com.github.wickoo.disguiseme.DisguiseMe;
 import com.github.wickoo.disguiseme.util.Utils;
 import com.github.wickoo.disguiseme.versions.DisguiseHandler;
 import org.bukkit.Bukkit;
@@ -18,12 +19,17 @@ public class ClearCMD implements CommandManager {
     }
 
     @Override
+    public String getAdditionalArgs() {
+        return "";
+    }
+
+    @Override
     public String getDescription() {
         return "Clears current disguise (if one exists)";
     }
 
     @Override
-    public void executeCommand(Player player, DisguiseHandler disguiseHandler, CoreCMD core, String[] args) {
+    public void executeCommand(Player player, DisguiseHandler disguiseHandler, CoreCMD core, String[] args, DisguiseMe plugin) {
 
         if (args.length == 2) {
 
@@ -35,6 +41,7 @@ public class ClearCMD implements CommandManager {
 
             if (!disguiseHandler.isDisguised(player.getUniqueId())) {
                 player.sendMessage(Utils.chat("&c&lERROR! &7Player &c" + args[1] + " &7is not disguised!"));
+                return;
             }
 
             disguiseHandler.clearDisguise(player);
@@ -46,6 +53,7 @@ public class ClearCMD implements CommandManager {
 
         if (!disguiseHandler.isDisguised(player.getUniqueId())) {
             player.sendMessage(Utils.chat("&c&lERROR! &7You are not disguised!"));
+            return;
         }
 
         disguiseHandler.clearDisguise(player);

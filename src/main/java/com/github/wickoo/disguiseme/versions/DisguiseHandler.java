@@ -9,7 +9,6 @@ import com.github.wickoo.disguiseme.DisguiseMe;
 import com.github.wickoo.disguiseme.util.Utils;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -68,9 +67,6 @@ public abstract class DisguiseHandler {
                     }
 
                     Player player = event.getPlayer();
-
-                    Bukkit.broadcastMessage("YAY!!!!");
-
                     setDisguiseSkin(player);
                     setDisguiseName(player);
                 }
@@ -87,11 +83,9 @@ public abstract class DisguiseHandler {
                     if (!isDisguised(event.getPlayer().getUniqueId())) {
                         return;
                     }
-
-                    Bukkit.broadcastMessage("YAY");
-
-                    setDisguiseSkin(event.getPlayer());
-                    setDisguiseName(event.getPlayer());
+                    Player player = event.getPlayer();
+                    setDisguiseSkin(player);
+                    setDisguiseName(player);
 
                 }
 
@@ -101,6 +95,11 @@ public abstract class DisguiseHandler {
     }
 
     public void asyncDisguise (Player disguiseTarget, UUID disguisedUUID, UUID actualUUID, String disguisedName, String actualName, DisguiseMe plugin) {
+
+        if (this.isDisguised(disguiseTarget.getUniqueId())) {
+            this.clearDisguise(disguiseTarget);
+            this.removeDisguisedPlayer(disguiseTarget.getUniqueId());
+        }
 
         BukkitTask task = new BukkitRunnable() {
             @Override
@@ -125,15 +124,37 @@ public abstract class DisguiseHandler {
                 addDisguised(actualUUID, disguise);
                 initiateDisguise(disguiseTarget);
                 addToCachedProfiles(disguisedName, disguise);
+                disguiseTarget.sendMessage(Utils.chat("&b&lSUCCESS! &r&7Now disguised as &b" + disguisedName + "&7!"));
 
             }
         }.runTaskAsynchronously(plugin);
 
-        disguiseTarget.sendMessage(Utils.chat("&b&lSUCCESS! &r&7Now disguised as &b" + disguisedName + "&7!"));
+    }
+
+    public void setCachedDisguise (String name, Player player) {
+
+        if (this.isDisguised(player.getUniqueId())) {
+            this.clearDisguise(player);
+            this.removeDisguisedPlayer(player.getUniqueId());
+        }
+
+        if (this.isDisguised(player.getUniqueId())) {
+            this.clearDisguise(player);
+            this.removeDisguisedPlayer(player.getUniqueId());
+        }
+
+        Disguise cachedDisguise = this.getCachedProfiles().get(name);
+        cachedDisguise.setActualName(player.getName());
+        cachedDisguise.setActualUUID(player.getUniqueId());
+        this.addDisguised(player.getUniqueId(), cachedDisguise);
+        this.initiateDisguise(player);
+        player.sendMessage(Utils.chat("&b&lSUCCESS! &r&7Now disguised as &b" + player.getName() + "&7!"));
 
     }
 
     public Map<String, Disguise> getCachedProfiles () { return null; }
+
+    public Map<UUID, Disguise> getDisguisedPlayers () { return null; }
 
     public boolean isDisguised (UUID uuid) { return false; }
 
