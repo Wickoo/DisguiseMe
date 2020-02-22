@@ -4,9 +4,12 @@ import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
+import com.comphenix.protocol.wrappers.WrappedGameProfile;
+import com.comphenix.protocol.wrappers.WrappedSignedProperty;
 import com.github.wickoo.disguiseme.Disguise;
 import com.github.wickoo.disguiseme.DisguiseMe;
 import com.github.wickoo.disguiseme.util.Utils;
+import com.google.common.collect.Multimap;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import org.bukkit.entity.Player;
@@ -20,9 +23,38 @@ import java.util.UUID;
 
 public abstract class DisguiseHandler {
 
-    public void setDisguiseSkin (Player player) { }
+    public void setDisguiseSkin (Player player) {
 
-    public void clearDisguiseSkin (Player player) { }
+        WrappedGameProfile gameProfile = WrappedGameProfile.fromPlayer(player);
+        Multimap<String, WrappedSignedProperty> propertiesMap = gameProfile.getProperties();
+
+        Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
+        disguise.setActualSignature(propertiesMap.get("textures").iterator().next().getSignature());
+        disguise.setActualTexture(propertiesMap.get("textures").iterator().next().getValue());
+
+        propertiesMap.removeAll("textures");
+        String signature = disguise.getDisguisedSignature();
+        String localTexture = disguise.getDisguisedTexture();
+
+        WrappedSignedProperty textures = new WrappedSignedProperty("textures", localTexture, signature);
+        propertiesMap.put("textures", textures);
+
+    }
+
+    public void clearDisguiseSkin (Player player) {
+
+        WrappedGameProfile gameProfile = WrappedGameProfile.fromPlayer(player);
+        Multimap<String, WrappedSignedProperty> propertiesMap = gameProfile.getProperties();
+        propertiesMap.removeAll("textures");
+
+        Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
+        String signature = disguise.getActualSignature();
+        String localTexture = disguise.getActualTexture();
+
+        WrappedSignedProperty textures = new WrappedSignedProperty("textures", localTexture, signature);
+        propertiesMap.put("textures", textures);
+
+    }
 
     public void initiateDisguise (Player player) { }
 

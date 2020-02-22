@@ -29,6 +29,7 @@
     <orderEntry type="library" name="spigot-1.9.4" level="project" />
     <orderEntry type="library" name="spigot-1.10.2" level="project" />
     <orderEntry type="library" name="spigot-1.11" level="project" />
+    <orderEntry type="library" name="spigot-api-1.8.8-R0.1-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.spigotmc:spigot-api:1.15.2-R0.1-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: commons-lang:commons-lang:2.6" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: com.google.guava:guava:21.0" level="project" />
@@ -38,6 +39,5 @@
     <orderEntry type="library" name="Maven: com.comphenix.protocol:ProtocolLib:4.5.0" level="project" />
     <orderEntry type="library" name="Maven: cglib:cglib-nodep:3.2.5" level="project" />
     <orderEntry type="library" name="Maven: com.comphenix.executors:BukkitExecutors:1.1-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="spigot-api-1.8.8-R0.1-SNAPSHOT" level="project" />
   </component>
 </module>

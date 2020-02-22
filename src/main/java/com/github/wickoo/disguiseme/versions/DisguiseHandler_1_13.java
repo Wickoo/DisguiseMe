@@ -5,8 +5,6 @@ import com.github.wickoo.disguiseme.Disguise;
 import com.github.wickoo.disguiseme.DisguiseMe;
 import com.github.wickoo.disguiseme.util.Utils;
 import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.properties.Property;
-import com.mojang.authlib.properties.PropertyMap;
 import net.minecraft.server.v1_13_R2.PacketPlayOutEntityDestroy;
 import net.minecraft.server.v1_13_R2.PacketPlayOutNamedEntitySpawn;
 import net.minecraft.server.v1_13_R2.PacketPlayOutPlayerInfo;
@@ -46,35 +44,13 @@ public class DisguiseHandler_1_13 extends DisguiseHandler {
 
     public void setDisguiseSkin (Player player) {
 
-        CraftPlayer craftPlayer = (CraftPlayer) player;
-        GameProfile gameProfile = craftPlayer.getProfile();
-        PropertyMap propertiesMap = gameProfile.getProperties();
-
-        Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
-        disguise.setActualSignature(propertiesMap.get("textures").iterator().next().getSignature());
-        disguise.setActualTexture(propertiesMap.get("textures").iterator().next().getValue());
-
-        propertiesMap.removeAll("textures");
-        String signature = disguise.getDisguisedSignature();
-        String localTexture = disguise.getDisguisedTexture();
-
-        propertiesMap.put("textures", new Property("textures", localTexture, signature));
+        super.setDisguiseSkin(player);
 
     }
 
     public void clearDisguiseSkin (Player player) {
 
-        CraftPlayer craftPlayer = (CraftPlayer) player;
-        GameProfile gameProfile = craftPlayer.getProfile();
-        PropertyMap propertiesMap = gameProfile.getProperties();
-        propertiesMap.removeAll("textures");
-
-        Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
-
-        String signature = disguise.getActualSignature();
-        String localTexture = disguise.getActualTexture();
-
-        propertiesMap.put("textures", new Property("textures", localTexture, signature));
+        super.clearDisguiseSkin(player);
 
     }
 

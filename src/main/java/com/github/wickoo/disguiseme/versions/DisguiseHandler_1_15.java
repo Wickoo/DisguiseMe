@@ -5,8 +5,6 @@ import com.github.wickoo.disguiseme.Disguise;
 import com.github.wickoo.disguiseme.DisguiseMe;
 import com.github.wickoo.disguiseme.util.Utils;
 import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.properties.Property;
-import com.mojang.authlib.properties.PropertyMap;
 import net.minecraft.server.v1_15_R1.PacketPlayOutEntityDestroy;
 import net.minecraft.server.v1_15_R1.PacketPlayOutNamedEntitySpawn;
 import net.minecraft.server.v1_15_R1.PacketPlayOutPlayerInfo;
@@ -44,37 +42,41 @@ public class DisguiseHandler_1_15 extends DisguiseHandler {
         cached = Bukkit.createInventory(null, 36, Utils.chat("&d&lCurrent Cached Disguises"));
     }
 
+    @Override
     public void setDisguiseSkin (Player player) {
 
-        CraftPlayer craftPlayer = (CraftPlayer) player;
-        GameProfile gameProfile = craftPlayer.getProfile();
-        PropertyMap propertiesMap = gameProfile.getProperties();
+        super.setDisguiseSkin(player);
+       // CraftPlayer craftPlayer = (CraftPlayer) player;
+       //GameProfile gameProfile = craftPlayer.getProfile();
+       // PropertyMap propertiesMap = gameProfile.getProperties();
 
-        Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
-        disguise.setActualSignature(propertiesMap.get("textures").iterator().next().getSignature());
-        disguise.setActualTexture(propertiesMap.get("textures").iterator().next().getValue());
+        //Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
+       // disguise.setActualSignature(propertiesMap.get("textures").iterator().next().getSignature());
+        //disguise.setActualTexture(propertiesMap.get("textures").iterator().next().getValue());
 
-        propertiesMap.removeAll("textures");
-        String signature = disguise.getDisguisedSignature();
-        String localTexture = disguise.getDisguisedTexture();
+       // propertiesMap.removeAll("textures");
+       // String signature = disguise.getDisguisedSignature();
+       // String localTexture = disguise.getDisguisedTexture();
 
-        propertiesMap.put("textures", new Property("textures", localTexture, signature));
+       // propertiesMap.put("textures", new Property("textures", localTexture, signature));
 
     }
 
+    @Override
     public void clearDisguiseSkin (Player player) {
 
-        CraftPlayer craftPlayer = (CraftPlayer) player;
-        GameProfile gameProfile = craftPlayer.getProfile();
-        PropertyMap propertiesMap = gameProfile.getProperties();
-        propertiesMap.removeAll("textures");
+        super.clearDisguiseSkin(player);
+        //CraftPlayer craftPlayer = (CraftPlayer) player;
+        //GameProfile gameProfile = craftPlayer.getProfile();
+        //PropertyMap propertiesMap = gameProfile.getProperties();
+        //propertiesMap.removeAll("textures");
 
-        Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
+        //Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
 
-        String signature = disguise.getActualSignature();
-        String localTexture = disguise.getActualTexture();
+        //String signature = disguise.getActualSignature();
+       // String localTexture = disguise.getActualTexture();
 
-        propertiesMap.put("textures", new Property("textures", localTexture, signature));
+        //propertiesMap.put("textures", new Property("textures", localTexture, signature));
 
     }
 
