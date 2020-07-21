@@ -3,21 +3,27 @@ package com.github.wickoo.disguiseme.versions;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.PacketAdapter;
+import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
-import com.comphenix.protocol.wrappers.WrappedGameProfile;
-import com.comphenix.protocol.wrappers.WrappedSignedProperty;
+import com.comphenix.protocol.wrappers.*;
 import com.github.wickoo.disguiseme.Disguise;
 import com.github.wickoo.disguiseme.DisguiseMe;
+import com.github.wickoo.disguiseme.packetwrappers.WrapperPlayServerNamedEntitySpawn;
+import com.github.wickoo.disguiseme.packetwrappers.WrapperPlayServerPlayerInfo;
 import com.github.wickoo.disguiseme.util.Utils;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -38,6 +44,25 @@ public abstract class DisguiseHandler {
 
         WrappedSignedProperty textures = new WrappedSignedProperty("textures", localTexture, signature);
         propertiesMap.put("textures", textures);
+
+    }
+
+    public WrappedGameProfile getNewProfile (Player player) {
+
+        WrappedGameProfile gameProfile = WrappedGameProfile.fromPlayer(player);
+        Multimap<String, WrappedSignedProperty> propertiesMap = gameProfile.getProperties();
+
+        Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
+        disguise.setActualSignature(propertiesMap.get("textures").iterator().next().getSignature());
+        disguise.setActualTexture(propertiesMap.get("textures").iterator().next().getValue());
+
+        propertiesMap.removeAll("textures");
+        String signature = disguise.getDisguisedSignature();
+        String localTexture = disguise.getDisguisedTexture();
+
+        WrappedSignedProperty textures = new WrappedSignedProperty("textures", localTexture, signature);
+        propertiesMap.put("textures", textures);
+        return gameProfile;
 
     }
 
@@ -94,13 +119,11 @@ public abstract class DisguiseHandler {
                 // Item packets (id: 0x29)
                 if (event.getPacketType() == PacketType.Play.Server.PLAYER_INFO) {
 
-                    if(!isDisguised(event.getPlayer().getUniqueId())) {
-                        return;
-                    }
-
                     Player player = event.getPlayer();
                     setDisguiseSkin(player);
                     setDisguiseName(player);
+                    initiateDisguise(player);
+
                 }
 
             }
@@ -115,9 +138,11 @@ public abstract class DisguiseHandler {
                     if (!isDisguised(event.getPlayer().getUniqueId())) {
                         return;
                     }
+
                     Player player = event.getPlayer();
                     setDisguiseSkin(player);
                     setDisguiseName(player);
+                    initiateDisguise(player);
 
                 }
 

@@ -42,7 +42,6 @@ public final class DisguiseMe extends JavaPlugin {
 
         disguiseHandler.addPacketListener(protocolManager, this);
         getLogger().log(Level.INFO, "DisguiseMe! successfully loaded on Minecraft version" + version);
-
     }
 
     @Override

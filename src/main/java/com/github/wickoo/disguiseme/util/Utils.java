@@ -54,7 +54,9 @@ public class Utils {
 
     public static DisguiseHandler getHandlerByVer (String version, ProtocolManager manager, DisguiseMe plugin) {
 
-        if (version.contains("1.15")) {
+        if (version.contains("1.16")) {
+            return new DisguiseHandler_1_16(plugin, manager);
+        } if (version.contains("1.15")) {
             return new DisguiseHandler_1_15(plugin, manager);
         } if (version.contains("1.14")) {
             return new DisguiseHandler_1_14(plugin, manager);
