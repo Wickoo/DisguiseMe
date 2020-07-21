@@ -3,20 +3,20 @@ package com.github.wickoo.disguiseme.versions;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.PacketAdapter;
-import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
-import com.comphenix.protocol.wrappers.*;
+import com.comphenix.protocol.wrappers.EnumWrappers;
+import com.comphenix.protocol.wrappers.PlayerInfoData;
+import com.comphenix.protocol.wrappers.WrappedGameProfile;
+import com.comphenix.protocol.wrappers.WrappedSignedProperty;
 import com.github.wickoo.disguiseme.Disguise;
 import com.github.wickoo.disguiseme.DisguiseMe;
 import com.github.wickoo.disguiseme.packetwrappers.WrapperPlayServerNamedEntitySpawn;
 import com.github.wickoo.disguiseme.packetwrappers.WrapperPlayServerPlayerInfo;
 import com.github.wickoo.disguiseme.util.Utils;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -47,7 +47,7 @@ public abstract class DisguiseHandler {
 
     }
 
-    public WrappedGameProfile getNewProfile (Player player) {
+    public WrappedGameProfile getNewProfile (Player player, String name) {
 
         WrappedGameProfile gameProfile = WrappedGameProfile.fromPlayer(player);
         Multimap<String, WrappedSignedProperty> propertiesMap = gameProfile.getProperties();
@@ -62,7 +62,10 @@ public abstract class DisguiseHandler {
 
         WrappedSignedProperty textures = new WrappedSignedProperty("textures", localTexture, signature);
         propertiesMap.put("textures", textures);
-        return gameProfile;
+
+        WrappedGameProfile newProfile = WrappedGameProfile.fromPlayer(player).withName(name);
+        newProfile.getProperties().putAll(gameProfile.getProperties());
+        return newProfile;
 
     }
 
@@ -119,10 +122,39 @@ public abstract class DisguiseHandler {
                 // Item packets (id: 0x29)
                 if (event.getPacketType() == PacketType.Play.Server.PLAYER_INFO) {
 
-                    Player player = event.getPlayer();
-                    setDisguiseSkin(player);
-                    setDisguiseName(player);
-                    initiateDisguise(player);
+                    WrapperPlayServerPlayerInfo wrapperPacket = new WrapperPlayServerPlayerInfo(event.getPacket());
+
+                    if (isDisguised(event.getPlayer().getUniqueId()) && !(wrapperPacket.getAction() == EnumWrappers.PlayerInfoAction.ADD_PLAYER)) {
+                        return;
+                    }
+
+                    List<PlayerInfoData> oldPlayerInfoDataList = wrapperPacket.getData();
+                    List<PlayerInfoData> newPlayerInfoDataList = wrapperPacket.getData();
+
+                    for (PlayerInfoData playerData : oldPlayerInfoDataList) {
+
+                        Player player = Bukkit.getPlayer(playerData.getProfile().getName());
+
+                        if (player == null) {
+                            continue;
+                        }
+
+                        if (!isDisguised(player.getUniqueId())) {
+                            continue;
+
+                        }
+
+                        Disguise disguise = getDisguisedPlayer(player.getUniqueId());
+                        WrappedGameProfile newGameProfile = getNewProfile(player, disguise.getDisguisedName()); //NULL
+                        PlayerInfoData newPlayerData = new PlayerInfoData(newGameProfile, playerData.getLatency(), playerData.getGameMode(), playerData.getDisplayName());
+                        newPlayerInfoDataList.add(newPlayerData);
+
+                    }
+
+                    wrapperPacket.setData(newPlayerInfoDataList);
+                    event.setPacket(wrapperPacket.getHandle());
+
+
 
                 }
 
@@ -135,14 +167,7 @@ public abstract class DisguiseHandler {
                 // Item packets (id: 0x29)
                 if (event.getPacketType() == PacketType.Play.Server.NAMED_ENTITY_SPAWN) {
 
-                    if (!isDisguised(event.getPlayer().getUniqueId())) {
-                        return;
-                    }
-
-                    Player player = event.getPlayer();
-                    setDisguiseSkin(player);
-                    setDisguiseName(player);
-                    initiateDisguise(player);
+                    WrapperPlayServerNamedEntitySpawn wrapperPacket = new WrapperPlayServerNamedEntitySpawn(event.getPacket());
 
                 }
 
