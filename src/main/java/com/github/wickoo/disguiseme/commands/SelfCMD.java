@@ -39,7 +39,7 @@ public class SelfCMD implements CommandManager {
             return;
         }
 
-        String actualName = player.getDisplayName();
+        String actualName = player.getName();
         String disguisedName = args[1];
         UUID disguisedUUID = Bukkit.getOfflinePlayer(disguisedName).getUniqueId();
 

@@ -45,7 +45,7 @@ public class OtherCMD implements CommandManager {
             return;
         }
 
-        String targetName = targetPlayer.getDisplayName();
+        String targetName = targetPlayer.getName();
         UUID targetUUID = targetPlayer.getUniqueId();
         String disguisedName2 = args[2];
         UUID disguisedUUID2 = Bukkit.getOfflinePlayer(disguisedName2).getUniqueId();

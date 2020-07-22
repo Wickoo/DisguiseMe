@@ -4,7 +4,6 @@ import com.comphenix.protocol.ProtocolManager;
 import com.github.wickoo.disguiseme.Disguise;
 import com.github.wickoo.disguiseme.DisguiseMe;
 import com.github.wickoo.disguiseme.util.Utils;
-import com.mojang.authlib.GameProfile;
 import net.minecraft.server.v1_16_R1.PacketPlayOutEntityDestroy;
 import net.minecraft.server.v1_16_R1.PacketPlayOutNamedEntitySpawn;
 import net.minecraft.server.v1_16_R1.PacketPlayOutPlayerInfo;
@@ -19,7 +18,6 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.lang.reflect.Field;
 import java.util.*;
 
 public class DisguiseHandler_1_16 extends DisguiseHandler {
@@ -43,45 +41,13 @@ public class DisguiseHandler_1_16 extends DisguiseHandler {
     }
 
     @Override
-    public void setDisguiseSkin (Player player) {
-
-        super.setDisguiseSkin(player);
-       // CraftPlayer craftPlayer = (CraftPlayer) player;
-       //GameProfile gameProfile = craftPlayer.getProfile();
-       // PropertyMap propertiesMap = gameProfile.getProperties();
-
-        //Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
-       // disguise.setActualSignature(propertiesMap.get("textures").iterator().next().getSignature());
-        //disguise.setActualTexture(propertiesMap.get("textures").iterator().next().getValue());
-
-       // propertiesMap.removeAll("textures");
-       // String signature = disguise.getDisguisedSignature();
-       // String localTexture = disguise.getDisguisedTexture();
-
-       // propertiesMap.put("textures", new Property("textures", localTexture, signature));
-
-    }
+    public void setDisguiseSkin (Player player) { super.setDisguiseSkin(player); }
 
     @Override
-    public void clearDisguiseSkin (Player player) {
-
-        super.clearDisguiseSkin(player);
-        //CraftPlayer craftPlayer = (CraftPlayer) player;
-        //GameProfile gameProfile = craftPlayer.getProfile();
-        //PropertyMap propertiesMap = gameProfile.getProperties();
-        //propertiesMap.removeAll("textures");
-
-        //Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
-
-        //String signature = disguise.getActualSignature();
-       // String localTexture = disguise.getActualTexture();
-
-        //propertiesMap.put("textures", new Property("textures", localTexture, signature));
-
-    }
+    public void clearDisguiseSkin (Player player, String signature) { super.clearDisguiseSkin(player, signature); }
 
     @Override
-    public void initiateDisguise (Player disguisedPlayer) {
+    public void initiateDisguise(Player disguisedPlayer) {
 
         setDisguiseSkin(disguisedPlayer);
         setDisguiseName(disguisedPlayer);
@@ -117,8 +83,9 @@ public class DisguiseHandler_1_16 extends DisguiseHandler {
     public void clearDisguise (Player disguisedPlayer) {
 
         clearDisguisedName(disguisedPlayer);
-        clearDisguiseSkin(disguisedPlayer);
+        getSignatureValue(disguisedPlayer, plugin);
         disguisedPlayer.setDisplayName(disguisedPlayers.get(disguisedPlayer.getUniqueId()).getActualName());
+
 
         BukkitTask task = new BukkitRunnable() {
             @Override
@@ -146,53 +113,14 @@ public class DisguiseHandler_1_16 extends DisguiseHandler {
 
     }
 
-    public void setDisguiseName (Player player) {
+    @Override
+    public void setDisguiseName (Player player) { super.setDisguiseName(player); }
 
-        CraftPlayer craftPlayer = (CraftPlayer) player;
-        GameProfile gameProfile = craftPlayer.getProfile();
-        Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
-        Field field;
+    @Override
+    public void clearDisguisedName (Player player) { super.clearDisguisedName(player); }
 
-        try {
-            field = gameProfile.getClass().getDeclaredField("name");
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        field.setAccessible(true);
-
-        try {
-            field.set(gameProfile, disguise.getDisguisedName());
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    public void clearDisguisedName (Player player) {
-
-        CraftPlayer craftPlayer = (CraftPlayer) player;
-        GameProfile gameProfile = craftPlayer.getProfile();
-        Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
-        Field field;
-
-        try {
-            field = gameProfile.getClass().getDeclaredField("name");
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        field.setAccessible(true);
-
-        try {
-            field.set(gameProfile, disguise.getActualName());
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
-    }
+    @Override
+    public void getSignatureValue (Player player, DisguiseMe plugin) { super.getSignatureValue(player, plugin); }
 
     @Override
     public void openDisguisedInv (Player player) {

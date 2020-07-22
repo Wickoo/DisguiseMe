@@ -4,7 +4,6 @@ import com.comphenix.protocol.ProtocolManager;
 import com.github.wickoo.disguiseme.Disguise;
 import com.github.wickoo.disguiseme.DisguiseMe;
 import com.github.wickoo.disguiseme.util.Utils;
-import com.mojang.authlib.GameProfile;
 import net.minecraft.server.v1_8_R3.PacketPlayOutEntityDestroy;
 import net.minecraft.server.v1_8_R3.PacketPlayOutNamedEntitySpawn;
 import net.minecraft.server.v1_8_R3.PacketPlayOutPlayerInfo;
@@ -19,7 +18,6 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.lang.reflect.Field;
 import java.util.*;
 
 @SuppressWarnings("deprecation")
@@ -43,18 +41,11 @@ public class DisguiseHandler_1_8 extends DisguiseHandler {
         cached = Bukkit.createInventory(null, 36, Utils.chat("&d&lCurrent Cached Disguises"));
     }
 
-    public void setDisguiseSkin (Player player)  {
-
-        super.setDisguiseSkin(player);
-
-    }
+    @Override
+    public void setDisguiseSkin (Player player)  { super.setDisguiseSkin(player); }
 
     @Override
-    public void clearDisguiseSkin (Player player) {
-
-        super.clearDisguiseSkin(player);
-
-    }
+    public void clearDisguiseSkin (Player player, String signature) { super.clearDisguiseSkin(player, signature); }
 
     @Override
     public void initiateDisguise (Player player) {
@@ -93,7 +84,7 @@ public class DisguiseHandler_1_8 extends DisguiseHandler {
     public void clearDisguise (Player player) {
 
         clearDisguisedName(player);
-        clearDisguiseSkin(player);
+        getSignatureValue(player, plugin);
         player.setDisplayName(disguisedPlayers.get(player.getUniqueId()).getActualName());
 
         BukkitTask task = new BukkitRunnable() {
@@ -122,56 +113,14 @@ public class DisguiseHandler_1_8 extends DisguiseHandler {
 
     }
 
+    @Override
+    public void setDisguiseName (Player player) { super.setDisguiseName(player); }
 
     @Override
-    public void setDisguiseName (Player player) {
-
-        CraftPlayer craftPlayer = (CraftPlayer) player;
-        GameProfile gameProfile = craftPlayer.getProfile();
-        Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
-        Field field;
-
-        try {
-            field = gameProfile.getClass().getDeclaredField("name");
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        field.setAccessible(true);
-
-        try {
-            field.set(gameProfile, disguise.getDisguisedName());
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
-    }
+    public void clearDisguisedName (Player player) { super.clearDisguisedName(player); }
 
     @Override
-    public void clearDisguisedName (Player player) {
-
-        CraftPlayer craftPlayer = (CraftPlayer) player;
-        GameProfile gameProfile = craftPlayer.getProfile();
-        Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
-        Field field;
-
-        try {
-            field = gameProfile.getClass().getDeclaredField("name");
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        field.setAccessible(true);
-
-        try {
-            field.set(gameProfile, disguise.getActualName());
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
-    }
+    public void getSignatureValue (Player player, DisguiseMe plugin) { super.getSignatureValue(player, plugin); }
 
     @Override
     public void openDisguisedInv (Player player) {
@@ -232,9 +181,7 @@ public class DisguiseHandler_1_8 extends DisguiseHandler {
     }
 
     @Override
-    public void asyncDisguise(Player disguiseTarget, UUID disguisedUUID, UUID actualUUID, String disguisedName, String actualName, DisguiseMe plugin) {
-        super.asyncDisguise(disguiseTarget, disguisedUUID, actualUUID, disguisedName, actualName, plugin);
-    }
+    public void asyncDisguise(Player disguiseTarget, UUID disguisedUUID, UUID actualUUID, String disguisedName, String actualName, DisguiseMe plugin) { super.asyncDisguise(disguiseTarget, disguisedUUID, actualUUID, disguisedName, actualName, plugin); }
 
     @Override
     public void setSkin (SkullMeta meta, String texture) { super.setSkin(meta, texture); }

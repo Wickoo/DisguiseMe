@@ -1,16 +1,9 @@
 package com.github.wickoo.disguiseme.versions;
 
-import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolManager;
-import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.wrappers.EnumWrappers;
-import com.comphenix.protocol.wrappers.PlayerInfoData;
-import com.comphenix.protocol.wrappers.WrappedGameProfile;
 import com.github.wickoo.disguiseme.Disguise;
 import com.github.wickoo.disguiseme.DisguiseMe;
-import com.github.wickoo.disguiseme.packetwrappers.WrapperPlayServerPlayerInfo;
 import com.github.wickoo.disguiseme.util.Utils;
-import com.mojang.authlib.GameProfile;
 import net.minecraft.server.v1_15_R1.PacketPlayOutEntityDestroy;
 import net.minecraft.server.v1_15_R1.PacketPlayOutNamedEntitySpawn;
 import net.minecraft.server.v1_15_R1.PacketPlayOutPlayerInfo;
@@ -25,8 +18,6 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 public class DisguiseHandler_1_15 extends DisguiseHandler {
@@ -50,42 +41,10 @@ public class DisguiseHandler_1_15 extends DisguiseHandler {
     }
 
     @Override
-    public void setDisguiseSkin (Player player) {
-
-        super.setDisguiseSkin(player);
-       // CraftPlayer craftPlayer = (CraftPlayer) player;
-       //GameProfile gameProfile = craftPlayer.getProfile();
-       // PropertyMap propertiesMap = gameProfile.getProperties();
-
-        //Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
-       // disguise.setActualSignature(propertiesMap.get("textures").iterator().next().getSignature());
-        //disguise.setActualTexture(propertiesMap.get("textures").iterator().next().getValue());
-
-       // propertiesMap.removeAll("textures");
-       // String signature = disguise.getDisguisedSignature();
-       // String localTexture = disguise.getDisguisedTexture();
-
-       // propertiesMap.put("textures", new Property("textures", localTexture, signature));
-
-    }
+    public void setDisguiseSkin (Player player) { super.setDisguiseSkin(player); }
 
     @Override
-    public void clearDisguiseSkin (Player player) {
-
-        super.clearDisguiseSkin(player);
-        //CraftPlayer craftPlayer = (CraftPlayer) player;
-        //GameProfile gameProfile = craftPlayer.getProfile();
-        //PropertyMap propertiesMap = gameProfile.getProperties();
-        //propertiesMap.removeAll("textures");
-
-        //Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
-
-        //String signature = disguise.getActualSignature();
-       // String localTexture = disguise.getActualTexture();
-
-        //propertiesMap.put("textures", new Property("textures", localTexture, signature));
-
-    }
+    public void clearDisguiseSkin (Player player, String signature) { super.clearDisguiseSkin(player, signature); }
 
     @Override
     public void initiateDisguise (Player player) {
@@ -104,49 +63,14 @@ public class DisguiseHandler_1_15 extends DisguiseHandler {
                         continue;
                     }
 
-                    WrappedGameProfile disguisedPlayerGP = WrappedGameProfile.fromPlayer(player);
+                    CraftPlayer otherCraftPlayer = (CraftPlayer) otherPlayer;
+                    CraftPlayer disguisedCraftPlayer = (CraftPlayer) player;
 
-                    PacketContainer packetRemovePlayer = new PacketContainer(PacketType.Play.Server.PLAYER_INFO);
-                    packetRemovePlayer.getGameProfiles().write(0, disguisedPlayerGP);
-                    packetRemovePlayer.getIntegers().write(0, 1);
-                    packetRemovePlayer.getPlayerInfoAction().write(1, EnumWrappers.PlayerInfoAction.REMOVE_PLAYER);
-
-                    PacketContainer packetDestroyEntity = new PacketContainer(PacketType.Play.Server.ENTITY_DESTROY);
-                    packetDestroyEntity.getIntegers().write(0,1);
-                    int[] entityID = {player.getEntityId()};
-                    packetDestroyEntity.getIntegerArrays().write(1, entityID);
-
-                    PacketContainer packetAddPlayer = new PacketContainer(PacketType.Play.Server.PLAYER_INFO);
-                    packetAddPlayer.getGameProfiles().write(0, disguisedPlayerGP);
-                    packetAddPlayer.getIntegers().write(0, 1);
-                    packetAddPlayer.getPlayerInfoAction().write(1, EnumWrappers.PlayerInfoAction.ADD_PLAYER);
-
-                    PacketContainer namedEntitySpawn = new PacketContainer(PacketType.Play.Server.NAMED_ENTITY_SPAWN);
-                    namedEntitySpawn.getIntegers().write(0, player.getEntityId());
-                    namedEntitySpawn.getUUIDs().write(0, player.getUniqueId());
-                    namedEntitySpawn.getDoubles().write(0, player.getLocation().getX());
-                    namedEntitySpawn.getDoubles().write(1, player.getLocation().getY());
-                    namedEntitySpawn.getDoubles().write(2, player.getLocation().getZ());
-
-
-                    try {
-                        manager.sendServerPacket(otherPlayer, packetRemovePlayer);
-                        manager.sendServerPacket(otherPlayer, packetDestroyEntity);
-                        manager.sendServerPacket(otherPlayer, packetAddPlayer);
-                        manager.sendServerPacket(otherPlayer, namedEntitySpawn);
-                    } catch (InvocationTargetException e) {
-                        e.printStackTrace();
-                    }
-
-
-                    //CraftPlayer otherCraftPlayer = (CraftPlayer) otherPlayer;
-                    //CraftPlayer disguisedCraftPlayer = (CraftPlayer) player;
-
-                    //otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, disguisedCraftPlayer.getHandle()));
-                    //otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutEntityDestroy(disguisedCraftPlayer.getEntityId()));
-                    //otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, disguisedCraftPlayer.getHandle()));
-                    //otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutNamedEntitySpawn(disguisedCraftPlayer.getHandle()));
-                    //otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutSpawnEntityLiving(disguisedCraftPlayer.getHandle()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, disguisedCraftPlayer.getHandle()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutEntityDestroy(disguisedCraftPlayer.getEntityId()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, disguisedCraftPlayer.getHandle()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutNamedEntitySpawn(disguisedCraftPlayer.getHandle()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutSpawnEntityLiving(disguisedCraftPlayer.getHandle()));
 
                 }
 
@@ -159,7 +83,7 @@ public class DisguiseHandler_1_15 extends DisguiseHandler {
     public void clearDisguise (Player player) {
 
         clearDisguisedName(player);
-        clearDisguiseSkin(player);
+        getSignatureValue(player, plugin);
         player.setDisplayName(disguisedPlayers.get(player.getUniqueId()).getActualName());
 
         BukkitTask task = new BukkitRunnable() {
@@ -172,45 +96,14 @@ public class DisguiseHandler_1_15 extends DisguiseHandler {
                         continue;
                     }
 
-                    WrappedGameProfile disguisedPlayerGP = WrappedGameProfile.fromPlayer(player);
+                    CraftPlayer otherCraftPlayer = (CraftPlayer) otherPlayer;
+                    CraftPlayer disguisedCraftPlayer = (CraftPlayer) player;
 
-                    PacketContainer packetRemovePlayer = new PacketContainer(PacketType.Play.Server.PLAYER_INFO);
-                    packetRemovePlayer.getGameProfiles().write(0, disguisedPlayerGP);
-                    packetRemovePlayer.getIntegers().write(0, 1);
-                    packetRemovePlayer.getPlayerInfoAction().write(1, EnumWrappers.PlayerInfoAction.REMOVE_PLAYER);
-
-                    PacketContainer packetDestroyEntity = new PacketContainer(PacketType.Play.Server.ENTITY_DESTROY);
-                    packetDestroyEntity.getIntegers().write(0,1);
-                    int[] entityID = {player.getEntityId()};
-                    packetDestroyEntity.getIntegerArrays().write(1, entityID);
-
-                    PacketContainer packetAddPlayer = new PacketContainer(PacketType.Play.Server.PLAYER_INFO);
-                    packetAddPlayer.getGameProfiles().write(0, disguisedPlayerGP);
-                    packetAddPlayer.getIntegers().write(0, 1);
-                    packetAddPlayer.getPlayerInfoAction().write(1, EnumWrappers.PlayerInfoAction.ADD_PLAYER);
-
-                    PacketContainer namedEntitySpawn = new PacketContainer(PacketType.Play.Server.NAMED_ENTITY_SPAWN);
-                    namedEntitySpawn.getIntegers().write(0, player.getEntityId());
-                    namedEntitySpawn.getUUIDs().write(0, player.getUniqueId());
-                    namedEntitySpawn.getDoubles().write(0, player.getLocation().getX());
-                    namedEntitySpawn.getDoubles().write(1, player.getLocation().getY());
-                    namedEntitySpawn.getDoubles().write(2, player.getLocation().getZ());
-
-
-                    try {
-                        manager.sendServerPacket(otherPlayer, packetRemovePlayer);
-                        manager.sendServerPacket(otherPlayer, packetDestroyEntity);
-                        manager.sendServerPacket(otherPlayer, packetAddPlayer);
-                        manager.sendServerPacket(otherPlayer, namedEntitySpawn);
-                    } catch (InvocationTargetException e) {
-                        e.printStackTrace();
-                    }
-
-                    //otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, disguisedCraftPlayer.getHandle()));
-                    //otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutEntityDestroy(disguisedCraftPlayer.getEntityId()));
-                    //otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, disguisedCraftPlayer.getHandle()));
-                    //otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutNamedEntitySpawn(disguisedCraftPlayer.getHandle()));
-                    //otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutSpawnEntityLiving(disguisedCraftPlayer.getHandle()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.REMOVE_PLAYER, disguisedCraftPlayer.getHandle()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutEntityDestroy(disguisedCraftPlayer.getEntityId()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutPlayerInfo(PacketPlayOutPlayerInfo.EnumPlayerInfoAction.ADD_PLAYER, disguisedCraftPlayer.getHandle()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutNamedEntitySpawn(disguisedCraftPlayer.getHandle()));
+                    otherCraftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutSpawnEntityLiving(disguisedCraftPlayer.getHandle()));
 
                 }
 
@@ -219,53 +112,14 @@ public class DisguiseHandler_1_15 extends DisguiseHandler {
 
     }
 
-    public void setDisguiseName (Player player) {
+    @Override
+    public void setDisguiseName (Player player) { super.setDisguiseName(player); }
 
-        CraftPlayer craftPlayer = (CraftPlayer) player;
-        GameProfile gameProfile = craftPlayer.getProfile();
-        Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
-        Field field;
+    @Override
+    public void clearDisguisedName (Player player) { super.clearDisguisedName(player); }
 
-        try {
-            field = gameProfile.getClass().getDeclaredField("name");
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        field.setAccessible(true);
-
-        try {
-            field.set(gameProfile, disguise.getDisguisedName());
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    public void clearDisguisedName (Player player) {
-
-        CraftPlayer craftPlayer = (CraftPlayer) player;
-        GameProfile gameProfile = craftPlayer.getProfile();
-        Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
-        Field field;
-
-        try {
-            field = gameProfile.getClass().getDeclaredField("name");
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        field.setAccessible(true);
-
-        try {
-            field.set(gameProfile, disguise.getActualName());
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
-    }
+    @Override
+    public void getSignatureValue (Player player, DisguiseMe plugin) { super.getSignatureValue(player, plugin); }
 
     @Override
     public void openDisguisedInv (Player player) {

@@ -10,19 +10,21 @@ import com.comphenix.protocol.wrappers.WrappedGameProfile;
 import com.comphenix.protocol.wrappers.WrappedSignedProperty;
 import com.github.wickoo.disguiseme.Disguise;
 import com.github.wickoo.disguiseme.DisguiseMe;
-import com.github.wickoo.disguiseme.packetwrappers.WrapperPlayServerNamedEntitySpawn;
 import com.github.wickoo.disguiseme.packetwrappers.WrapperPlayServerPlayerInfo;
 import com.github.wickoo.disguiseme.util.Utils;
 import com.google.common.collect.Multimap;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -47,7 +49,7 @@ public abstract class DisguiseHandler {
 
     }
 
-    public WrappedGameProfile getNewProfile (Player player, String name) {
+    public WrappedGameProfile getDisguisedProfile(Player player) {
 
         WrappedGameProfile gameProfile = WrappedGameProfile.fromPlayer(player);
         Multimap<String, WrappedSignedProperty> propertiesMap = gameProfile.getProperties();
@@ -63,20 +65,19 @@ public abstract class DisguiseHandler {
         WrappedSignedProperty textures = new WrappedSignedProperty("textures", localTexture, signature);
         propertiesMap.put("textures", textures);
 
-        WrappedGameProfile newProfile = WrappedGameProfile.fromPlayer(player).withName(name);
+        WrappedGameProfile newProfile = WrappedGameProfile.fromPlayer(player).withName(disguise.getDisguisedName());
         newProfile.getProperties().putAll(gameProfile.getProperties());
         return newProfile;
 
     }
 
-    public void clearDisguiseSkin (Player player) {
+    public void clearDisguiseSkin (Player player, String signature) {
 
         WrappedGameProfile gameProfile = WrappedGameProfile.fromPlayer(player);
         Multimap<String, WrappedSignedProperty> propertiesMap = gameProfile.getProperties();
         propertiesMap.removeAll("textures");
 
         Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
-        String signature = disguise.getActualSignature();
         String localTexture = disguise.getActualTexture();
 
         WrappedSignedProperty textures = new WrappedSignedProperty("textures", localTexture, signature);
@@ -88,9 +89,41 @@ public abstract class DisguiseHandler {
 
     public void clearDisguise (Player player) { }
 
-    public void setDisguiseName (Player player) { }
+    public void setDisguiseName (Player player) {
 
-    public void clearDisguisedName (Player player) { }
+        Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
+        Class<?> craftPlayerClass = player.getClass();
+
+        try {
+            Method getProfileMethod = craftPlayerClass.getDeclaredMethod("getProfile");
+            getProfileMethod.setAccessible(true);
+            Object gameProfile = getProfileMethod.invoke(player);
+            Field field = gameProfile.getClass().getDeclaredField("name");
+            field.setAccessible(true);
+            field.set(gameProfile, ChatColor.stripColor(disguise.getActualName()));
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void clearDisguisedName (Player player) {
+
+        Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
+        Class<?> craftPlayerClass = player.getClass();
+
+        try {
+            Method getProfileMethod = craftPlayerClass.getDeclaredMethod("getProfile");
+            getProfileMethod.setAccessible(true);
+            Object gameProfile = getProfileMethod.invoke(player);
+            Field field = gameProfile.getClass().getDeclaredField("name");
+            field.setAccessible(true);
+            field.set(gameProfile, ChatColor.stripColor(disguise.getActualName()));
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+
+    }
 
     public void openDisguisedInv (Player player) { }
 
@@ -135,17 +168,12 @@ public abstract class DisguiseHandler {
 
                         Player player = Bukkit.getPlayer(playerData.getProfile().getName());
 
-                        if (player == null) {
+                        if (player == null || !isDisguised(player.getUniqueId())) {
                             continue;
-                        }
-
-                        if (!isDisguised(player.getUniqueId())) {
-                            continue;
-
                         }
 
                         Disguise disguise = getDisguisedPlayer(player.getUniqueId());
-                        WrappedGameProfile newGameProfile = getNewProfile(player, disguise.getDisguisedName()); //NULL
+                        WrappedGameProfile newGameProfile = getDisguisedProfile(player);
                         PlayerInfoData newPlayerData = new PlayerInfoData(newGameProfile, playerData.getLatency(), playerData.getGameMode(), playerData.getDisplayName());
                         newPlayerInfoDataList.add(newPlayerData);
 
@@ -155,19 +183,6 @@ public abstract class DisguiseHandler {
                     event.setPacket(wrapperPacket.getHandle());
 
 
-
-                }
-
-            }
-        });
-
-        manager.addPacketListener (new PacketAdapter(plugin, PacketType.Play.Server.NAMED_ENTITY_SPAWN) {
-            @Override
-            public void onPacketSending(PacketEvent event) {
-                // Item packets (id: 0x29)
-                if (event.getPacketType() == PacketType.Play.Server.NAMED_ENTITY_SPAWN) {
-
-                    WrapperPlayServerNamedEntitySpawn wrapperPacket = new WrapperPlayServerNamedEntitySpawn(event.getPacket());
 
                 }
 
@@ -212,6 +227,37 @@ public abstract class DisguiseHandler {
         }.runTaskAsynchronously(plugin);
 
     }
+
+    public void getSignatureValue (Player player, DisguiseMe plugin) {
+
+        if (!this.isDisguised(player.getUniqueId())) {
+            return;
+        }
+
+        BukkitTask task = new BukkitRunnable() {
+            @Override
+            public void run() {
+
+                String[] strings = Utils.fetch(player.getUniqueId(), player);
+
+                if (strings == null || strings.length == 0) {
+                    player.sendMessage(Utils.chat("&c&lERROR! &r&7Couldn't fetch original signature... Relog."));
+                    return;
+                }
+
+                if (strings[0] == null) {
+                    return;
+                }
+
+                clearDisguiseSkin(player, strings[1]);
+                removeDisguisedPlayer(player.getUniqueId());
+                player.sendMessage(Utils.chat("&b&lSUCCESS! &7You are no longer disguised!"));
+
+            }
+        }.runTaskAsynchronously(plugin);
+
+    }
+
 
     public void setCachedDisguise (String name, Player player) {
 

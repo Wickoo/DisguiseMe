@@ -57,8 +57,6 @@ public class ClearCMD implements CommandManager {
         }
 
         disguiseHandler.clearDisguise(player);
-        disguiseHandler.removeDisguisedPlayer(player.getUniqueId());
-        player.sendMessage(Utils.chat("&b&lSUCCESS! &7You are no longer disguised!"));
     }
 
 }
