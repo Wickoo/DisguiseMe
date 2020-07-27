@@ -10,6 +10,8 @@ import com.comphenix.protocol.wrappers.WrappedGameProfile;
 import com.comphenix.protocol.wrappers.WrappedSignedProperty;
 import com.github.wickoo.disguiseme.Disguise;
 import com.github.wickoo.disguiseme.DisguiseMe;
+import com.github.wickoo.disguiseme.packetwrappers.WrapperPlayServerEntityDestroy;
+import com.github.wickoo.disguiseme.packetwrappers.WrapperPlayServerNamedEntitySpawn;
 import com.github.wickoo.disguiseme.packetwrappers.WrapperPlayServerPlayerInfo;
 import com.github.wickoo.disguiseme.util.Utils;
 import com.google.common.collect.Multimap;
@@ -17,7 +19,10 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -25,6 +30,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -55,8 +61,6 @@ public abstract class DisguiseHandler {
         Multimap<String, WrappedSignedProperty> propertiesMap = gameProfile.getProperties();
 
         Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
-        disguise.setActualSignature(propertiesMap.get("textures").iterator().next().getSignature());
-        disguise.setActualTexture(propertiesMap.get("textures").iterator().next().getValue());
 
         propertiesMap.removeAll("textures");
         String signature = disguise.getDisguisedSignature();
@@ -71,7 +75,7 @@ public abstract class DisguiseHandler {
 
     }
 
-    public void clearDisguiseSkin (Player player, String signature) {
+    public void clearDisguiseSkin (Player player) {
 
         WrappedGameProfile gameProfile = WrappedGameProfile.fromPlayer(player);
         Multimap<String, WrappedSignedProperty> propertiesMap = gameProfile.getProperties();
@@ -79,15 +83,170 @@ public abstract class DisguiseHandler {
 
         Disguise disguise = this.getDisguisedPlayer(player.getUniqueId());
         String localTexture = disguise.getActualTexture();
+        String localSignature = disguise.getActualSignature();
 
-        WrappedSignedProperty textures = new WrappedSignedProperty("textures", localTexture, signature);
+        WrappedSignedProperty textures = new WrappedSignedProperty("textures", localTexture, localSignature);
         propertiesMap.put("textures", textures);
 
     }
 
-    public void initiateDisguise (Player player) { }
+    public void initiateDisguise(Player disguisedPlayer) {
 
-    public void clearDisguise (Player player) { }
+        setDisguiseSkin(disguisedPlayer);
+        setDisguiseName(disguisedPlayer);
+        disguisedPlayer.setDisplayName(getDisguisedPlayers().get(disguisedPlayer.getUniqueId()).getDisguisedName());
+
+        WrapperPlayServerPlayerInfo serverInfoRemove = new WrapperPlayServerPlayerInfo();
+        serverInfoRemove.setAction(EnumWrappers.PlayerInfoAction.REMOVE_PLAYER);
+        List<PlayerInfoData> playerInfoDataList = serverInfoRemove.getData();
+
+        //loop and build list of player info
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+
+            PlayerInfoData playerInfoData;
+
+            if (onlinePlayer.getUniqueId().equals(disguisedPlayer.getUniqueId())) {
+
+                playerInfoData = new PlayerInfoData(getDisguisedProfile(disguisedPlayer), Utils.getPing(disguisedPlayer), EnumWrappers.NativeGameMode.fromBukkit(disguisedPlayer.getGameMode()), null);
+                playerInfoDataList.add(playerInfoData);
+                continue;
+
+            }
+
+            playerInfoData = new PlayerInfoData(WrappedGameProfile.fromPlayer(onlinePlayer), Utils.getPing(onlinePlayer), EnumWrappers.NativeGameMode.fromBukkit(onlinePlayer.getGameMode()), null);
+            playerInfoDataList.add(playerInfoData);
+
+        }
+        serverInfoRemove.setData(playerInfoDataList);
+
+
+        WrapperPlayServerEntityDestroy packetDestroyEntity = new WrapperPlayServerEntityDestroy();
+        packetDestroyEntity.setEntityIds(new int[]{disguisedPlayer.getEntityId()});
+
+
+        WrapperPlayServerPlayerInfo serverInfoAdd = new WrapperPlayServerPlayerInfo();
+        serverInfoAdd.setData(playerInfoDataList);
+        serverInfoAdd.setAction(EnumWrappers.PlayerInfoAction.ADD_PLAYER);
+
+
+        WrapperPlayServerNamedEntitySpawn namedEntitySpawn = new WrapperPlayServerNamedEntitySpawn();
+        namedEntitySpawn.setY(disguisedPlayer.getLocation().getY());
+        namedEntitySpawn.setX(disguisedPlayer.getLocation().getX());
+        namedEntitySpawn.setZ(disguisedPlayer.getLocation().getZ());
+        namedEntitySpawn.setYaw(disguisedPlayer.getLocation().getYaw());
+        namedEntitySpawn.setPitch(disguisedPlayer.getLocation().getPitch());
+        namedEntitySpawn.setEntityID(disguisedPlayer.getEntityId());
+        namedEntitySpawn.setPlayerUUID(disguisedPlayer.getUniqueId());
+
+
+        for (Player otherPlayer : Bukkit.getOnlinePlayers()) {
+
+            if (otherPlayer.getUniqueId().equals(disguisedPlayer.getUniqueId())) {
+                continue;
+            }
+
+
+            try {
+                getManager().sendServerPacket(otherPlayer, serverInfoRemove.getHandle());
+                getManager().sendServerPacket(otherPlayer, packetDestroyEntity.getHandle());
+                getManager().sendServerPacket(otherPlayer, serverInfoAdd.getHandle());
+                getManager().sendServerPacket(otherPlayer, namedEntitySpawn.getHandle());
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+    }
+
+    public void clearDisguise (Player disguisedPlayer) {
+
+        final WrappedGameProfile oldDisguisedProfile = getDisguisedProfile(disguisedPlayer);
+        clearDisguisedName(disguisedPlayer);
+        clearDisguiseSkin(disguisedPlayer);
+        disguisedPlayer.setDisplayName(getDisguisedPlayers().get(disguisedPlayer.getUniqueId()).getActualName());
+
+        BukkitTask task = new BukkitRunnable() {
+            @Override
+            public void run() {
+
+                WrapperPlayServerPlayerInfo serverInfoRemove = new WrapperPlayServerPlayerInfo();
+                serverInfoRemove.setAction(EnumWrappers.PlayerInfoAction.REMOVE_PLAYER);
+                List<PlayerInfoData> playerInfoDataListOld = serverInfoRemove.getData();
+
+                for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+
+                    PlayerInfoData playerInfoData;
+
+                    if (onlinePlayer.getUniqueId().equals(disguisedPlayer.getUniqueId())) {
+
+                        playerInfoData = new PlayerInfoData(oldDisguisedProfile, Utils.getPing(disguisedPlayer), EnumWrappers.NativeGameMode.fromBukkit(disguisedPlayer.getGameMode()), null);
+                        playerInfoDataListOld.add(playerInfoData);
+                        continue;
+
+                    }
+
+                    playerInfoData = new PlayerInfoData(WrappedGameProfile.fromPlayer(onlinePlayer), Utils.getPing(onlinePlayer), EnumWrappers.NativeGameMode.fromBukkit(onlinePlayer.getGameMode()),null);
+                    playerInfoDataListOld.add(playerInfoData);
+
+                }
+                serverInfoRemove.setData(playerInfoDataListOld);
+
+
+                WrapperPlayServerEntityDestroy packetDestroyEntity = new WrapperPlayServerEntityDestroy();
+                packetDestroyEntity.setEntityIds(new int[]{disguisedPlayer.getEntityId()});
+
+
+                WrapperPlayServerPlayerInfo serverInfoAdd = new WrapperPlayServerPlayerInfo();
+                serverInfoAdd.setAction(EnumWrappers.PlayerInfoAction.ADD_PLAYER);
+                List<PlayerInfoData> playerInfoDataListNew = serverInfoAdd.getData();
+
+                for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+
+                    PlayerInfoData playerInfoData = new PlayerInfoData(WrappedGameProfile.fromPlayer(onlinePlayer), Utils.getPing(onlinePlayer), EnumWrappers.NativeGameMode.fromBukkit(onlinePlayer.getGameMode()),null);
+                    playerInfoDataListNew.add(playerInfoData);
+
+                }
+                serverInfoAdd.setData(playerInfoDataListNew);
+
+
+
+                WrapperPlayServerNamedEntitySpawn namedEntitySpawn = new WrapperPlayServerNamedEntitySpawn();
+                namedEntitySpawn.setY(disguisedPlayer.getLocation().getY());
+                namedEntitySpawn.setX(disguisedPlayer.getLocation().getX());
+                namedEntitySpawn.setZ(disguisedPlayer.getLocation().getZ());
+                namedEntitySpawn.setYaw(disguisedPlayer.getLocation().getYaw());
+                namedEntitySpawn.setPitch(disguisedPlayer.getLocation().getPitch());
+                namedEntitySpawn.setEntityID(disguisedPlayer.getEntityId());
+                namedEntitySpawn.setPlayerUUID(disguisedPlayer.getUniqueId());
+
+
+
+                for (Player otherPlayer : Bukkit.getOnlinePlayers()) {
+
+                    if (otherPlayer.getUniqueId().equals(disguisedPlayer.getUniqueId())) {
+                        continue;
+                    }
+
+
+                    try {
+                        getManager().sendServerPacket(otherPlayer, serverInfoRemove.getHandle());
+                        getManager().sendServerPacket(otherPlayer, packetDestroyEntity.getHandle());
+                        getManager().sendServerPacket(otherPlayer, serverInfoAdd.getHandle());
+                        getManager().sendServerPacket(otherPlayer, namedEntitySpawn.getHandle());
+                    } catch (InvocationTargetException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+
+            }
+        }.runTaskLater(getPlugin(), 0);
+
+        removeDisguisedPlayer(disguisedPlayer.getUniqueId());
+        disguisedPlayer.sendMessage(Utils.chat("&b&lSUCCESS! &r&7You are no longer disguised."));
+
+    }
 
     public void setDisguiseName (Player player) {
 
@@ -100,7 +259,7 @@ public abstract class DisguiseHandler {
             Object gameProfile = getProfileMethod.invoke(player);
             Field field = gameProfile.getClass().getDeclaredField("name");
             field.setAccessible(true);
-            field.set(gameProfile, ChatColor.stripColor(disguise.getActualName()));
+            field.set(gameProfile, ChatColor.stripColor(disguise.getDisguisedName()));
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | NoSuchFieldException e) {
             e.printStackTrace();
         }
@@ -125,9 +284,56 @@ public abstract class DisguiseHandler {
 
     }
 
-    public void openDisguisedInv (Player player) { }
+    public void openDisguisedInv (Player player) {
 
-    public void openCachedInv (Player player) { }
+        getInv().clear();
+
+        for (Map.Entry<UUID, Disguise> uuid : getDisguisedPlayers().entrySet()) {
+
+            UUID actualUUID = uuid.getKey();
+            Disguise disguise = getDisguisedPlayers().get(actualUUID);
+
+            ItemStack skull = new ItemStack(Material.getMaterial("SKULL_ITEM"), 1, (short) 3);
+            SkullMeta meta = (SkullMeta) skull.getItemMeta();
+            setSkin(meta, disguise.getDisguisedTexture());
+            meta.setDisplayName(Utils.chat("&b&l" + disguise.getActualName()));
+            List<String> lore = new ArrayList<>();
+            lore.add(0, Utils.chat("&r&fDisguised as: " + "&b&l" + disguise.getDisguisedName()));
+            lore.add(1, Utils.chat("&r&fDisguise UUID: " + "&b&l" + disguise.getDisguisedUUID()));
+            meta.setLore(lore);
+            skull.setItemMeta(meta);
+            getInv().addItem(skull);
+
+        }
+
+        player.openInventory(getInv());
+
+    }
+
+    public void openCachedInv (Player player) {
+
+        getCachedInv().clear();
+
+        for (Map.Entry<String, Disguise> string : getCachedProfiles().entrySet()) {
+
+            String disguiseName = string.getKey();
+            Disguise disguise = getCachedProfiles().get(disguiseName);
+
+            ItemStack skull = new ItemStack(Material.getMaterial("SKULL_ITEM"), 1, (short) 3);
+            SkullMeta meta = (SkullMeta) skull.getItemMeta();
+            setSkin(meta, disguise.getDisguisedTexture());
+            meta.setDisplayName(Utils.chat("&b&l" + disguise.getDisguisedName()));
+            List<String> lore = new ArrayList<>();
+            lore.add(0, Utils.chat("&r&fUUID: " + "&b&l" + disguise.getDisguisedUUID()));
+            meta.setLore(lore);
+            skull.setItemMeta(meta);
+            getCachedInv().addItem(skull);
+
+        }
+
+        player.openInventory(getCachedInv());
+
+    }
 
     public void setSkin (SkullMeta meta, String texture) {
 
@@ -191,7 +397,7 @@ public abstract class DisguiseHandler {
 
     }
 
-    public void asyncDisguise (Player disguiseTarget, UUID disguisedUUID, UUID actualUUID, String disguisedName, String actualName, DisguiseMe plugin) {
+    public void asyncDisguise (Player disguiseTarget, UUID disguisedUUID, UUID actualUUID, String disguisedName, String actualName) {
 
         if (this.isDisguised(disguiseTarget.getUniqueId())) {
             this.clearDisguise(disguiseTarget);
@@ -219,45 +425,23 @@ public abstract class DisguiseHandler {
                 disguise.setDisguisedSignature(signature);
                 disguise.setDisguisedTexture(texture);
                 addDisguised(actualUUID, disguise);
-                initiateDisguise(disguiseTarget);
+
+                BukkitTask task = new BukkitRunnable() {
+                    @Override
+                    public void run() {
+
+                        initiateDisguise(disguiseTarget);
+
+                    }
+                }.runTaskLater(getPlugin(), 0);
+
                 addToCachedProfiles(disguisedName, disguise);
                 disguiseTarget.sendMessage(Utils.chat("&b&lSUCCESS! &r&7Now disguised as &b" + disguisedName + "&7!"));
 
             }
-        }.runTaskAsynchronously(plugin);
+        }.runTaskAsynchronously(getPlugin());
 
     }
-
-    public void getSignatureValue (Player player, DisguiseMe plugin) {
-
-        if (!this.isDisguised(player.getUniqueId())) {
-            return;
-        }
-
-        BukkitTask task = new BukkitRunnable() {
-            @Override
-            public void run() {
-
-                String[] strings = Utils.fetch(player.getUniqueId(), player);
-
-                if (strings == null || strings.length == 0) {
-                    player.sendMessage(Utils.chat("&c&lERROR! &r&7Couldn't fetch original signature... Relog."));
-                    return;
-                }
-
-                if (strings[0] == null) {
-                    return;
-                }
-
-                clearDisguiseSkin(player, strings[1]);
-                removeDisguisedPlayer(player.getUniqueId());
-                player.sendMessage(Utils.chat("&b&lSUCCESS! &7You are no longer disguised!"));
-
-            }
-        }.runTaskAsynchronously(plugin);
-
-    }
-
 
     public void setCachedDisguise (String name, Player player) {
 
@@ -293,4 +477,12 @@ public abstract class DisguiseHandler {
     public void addDisguised (UUID uuid, Disguise disguise) { }
 
     public void removeDisguisedPlayer (UUID uuid) { }
+
+    public DisguiseMe getPlugin () { return null; }
+
+    public ProtocolManager getManager () {return null;}
+
+    public Inventory getInv () { return null; }
+
+    public Inventory getCachedInv () { return null; }
 }

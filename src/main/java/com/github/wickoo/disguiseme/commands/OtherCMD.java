@@ -55,7 +55,7 @@ public class OtherCMD implements CommandManager {
             return;
         }
 
-        disguiseHandler.asyncDisguise(targetPlayer, disguisedUUID2, targetUUID, disguisedName2, targetName, plugin);
+        disguiseHandler.asyncDisguise(targetPlayer, disguisedUUID2, targetUUID, disguisedName2, targetName);
         player.sendMessage(Utils.chat("&7Disguised &b" + targetName + " &7as &b" + disguisedName2));
 
     }

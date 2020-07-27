@@ -7,7 +7,6 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 
-@SuppressWarnings("deprecation")
 public class HelpCMD implements CommandManager {
 
     @Override

@@ -3,6 +3,7 @@ package com.github.wickoo.disguiseme;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import com.github.wickoo.disguiseme.commands.CoreCMD;
+import com.github.wickoo.disguiseme.commands.Ping;
 import com.github.wickoo.disguiseme.events.CommandPreProcess;
 import com.github.wickoo.disguiseme.events.InvClick;
 import com.github.wickoo.disguiseme.events.PlayerJoin;
@@ -36,6 +37,7 @@ public final class DisguiseMe extends JavaPlugin {
         }
 
         this.getCommand("disguise").setExecutor(new CoreCMD(plugin, disguiseHandler));
+        this.getCommand("ping").setExecutor(new Ping());
         this.getServer().getPluginManager().registerEvents(new InvClick(plugin), this);
         this.getServer().getPluginManager().registerEvents(new PlayerJoin(disguiseHandler), this);
         this.getServer().getPluginManager().registerEvents(new CommandPreProcess(plugin), this);

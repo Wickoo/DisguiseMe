@@ -9,3 +9,5 @@ commands:
     description: Disguise command
     usage: /disguise <player>
     aliases: [dis, d]
+  ping:
+    usage: /ping

@@ -49,7 +49,7 @@ public class SelfCMD implements CommandManager {
 
         }
 
-        disguiseHandler.asyncDisguise(player, disguisedUUID, player.getUniqueId(), disguisedName, actualName, plugin);
+        disguiseHandler.asyncDisguise(player, disguisedUUID, player.getUniqueId(), disguisedName, actualName);
 
     }
 
