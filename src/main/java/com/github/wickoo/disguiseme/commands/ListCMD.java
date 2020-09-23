@@ -1,8 +1,13 @@
 package com.github.wickoo.disguiseme.commands;
 
 import com.github.wickoo.disguiseme.DisguiseMe;
+import com.github.wickoo.disguiseme.inventories.DisguiseInventory;
+import com.github.wickoo.disguiseme.inventories.GUI;
 import com.github.wickoo.disguiseme.versions.DisguiseHandler;
 import org.bukkit.entity.Player;
+
+import java.util.Map;
+import java.util.UUID;
 
 public class ListCMD implements CommandManager {
 
@@ -28,7 +33,12 @@ public class ListCMD implements CommandManager {
 
     @Override
     public void executeCommand(Player player, DisguiseHandler disguiseHandler, CoreCMD core, String[] args, DisguiseMe plugin) {
-        disguiseHandler.openDisguisedInv(player);
+
+        disguiseHandler.getGUIHandler().openDisguisedPlayersInventory(player);
+
+        Map<UUID, GUI> openedInventories = disguiseHandler.getGUIHandler().getOpenInventory();
+        openedInventories.put(player.getUniqueId(), new DisguiseInventory());
+        disguiseHandler.getGUIHandler().setOpenInventory(openedInventories);
     }
 
 }

@@ -6,7 +6,9 @@ import com.github.wickoo.disguiseme.commands.CoreCMD;
 import com.github.wickoo.disguiseme.commands.Ping;
 import com.github.wickoo.disguiseme.events.CommandPreProcess;
 import com.github.wickoo.disguiseme.events.InvClick;
+import com.github.wickoo.disguiseme.events.InvClose;
 import com.github.wickoo.disguiseme.events.PlayerJoin;
+import com.github.wickoo.disguiseme.runnables.ActionbarRunnable;
 import com.github.wickoo.disguiseme.util.Utils;
 import com.github.wickoo.disguiseme.versions.DisguiseHandler;
 import org.bukkit.Bukkit;
@@ -41,9 +43,13 @@ public final class DisguiseMe extends JavaPlugin {
         this.getServer().getPluginManager().registerEvents(new InvClick(plugin), this);
         this.getServer().getPluginManager().registerEvents(new PlayerJoin(disguiseHandler), this);
         this.getServer().getPluginManager().registerEvents(new CommandPreProcess(plugin), this);
+        this.getServer().getPluginManager().registerEvents(new InvClose(plugin, disguiseHandler), this);
 
         disguiseHandler.addPacketListener(protocolManager, this);
         getLogger().log(Level.INFO, "DisguiseMe! successfully loaded on Minecraft version" + version);
+
+        ActionbarRunnable actionbarRunnable = new ActionbarRunnable(disguiseHandler);
+        actionbarRunnable.runTaskTimer(this, 0, 40);
     }
 
     @Override

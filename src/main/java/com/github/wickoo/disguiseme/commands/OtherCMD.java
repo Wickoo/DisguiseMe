@@ -1,5 +1,6 @@
 package com.github.wickoo.disguiseme.commands;
 
+import com.github.wickoo.disguiseme.Disguise;
 import com.github.wickoo.disguiseme.DisguiseMe;
 import com.github.wickoo.disguiseme.util.Utils;
 import com.github.wickoo.disguiseme.versions.DisguiseHandler;
@@ -7,6 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class OtherCMD implements CommandManager {
 
@@ -45,18 +47,28 @@ public class OtherCMD implements CommandManager {
             return;
         }
 
-        String targetName = targetPlayer.getName();
+        String targetName;
         UUID targetUUID = targetPlayer.getUniqueId();
-        String disguisedName2 = args[2];
-        UUID disguisedUUID2 = Bukkit.getOfflinePlayer(disguisedName2).getUniqueId();
+        String disguisedName = args[2];
 
-        if (disguiseHandler.getCachedProfiles().containsKey(disguisedName2)) {
-            disguiseHandler.setCachedDisguise(disguisedName2, targetPlayer);
-            return;
-        }
 
-        disguiseHandler.asyncDisguise(targetPlayer, disguisedUUID2, targetUUID, disguisedName2, targetName);
-        player.sendMessage(Utils.chat("&7Disguised &b" + targetName + " &7as &b" + disguisedName2));
+        if (disguiseHandler.isDisguised(targetPlayer.getUniqueId())) targetName = disguiseHandler.getDisguisedPlayer(targetUUID).getActualName();
+        else targetName = targetPlayer.getName();
+
+        CompletableFuture<Disguise> completableFuture = CompletableFuture.supplyAsync(() -> Disguise.buildDisguise(targetUUID, targetName, disguisedName)).thenApply(disguise -> {
+
+            if (disguise == null) {
+                player.sendMessage(Utils.chat("&c&lERROR! &7The player &c" + disguisedName + " &7does not exist"));
+                return null;
+            }
+
+            disguiseHandler.registerDisguise(targetPlayer, disguise);
+            disguiseHandler.updateDisguise(targetPlayer);
+            targetPlayer.sendMessage(Utils.chat("&b&lSUCCESS! &b" + player.getName() + " &7disguised you as &b" + disguisedName));
+            player.sendMessage(Utils.chat("&b&lSUCCESS! &7You disguised &b" + targetName + " &7as &b" + disguisedName));
+            return disguise;
+
+        });
 
     }
 

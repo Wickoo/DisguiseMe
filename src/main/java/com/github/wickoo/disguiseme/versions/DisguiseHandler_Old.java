@@ -7,6 +7,7 @@ import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import com.comphenix.protocol.wrappers.WrappedGameProfile;
 import com.github.wickoo.disguiseme.Disguise;
 import com.github.wickoo.disguiseme.DisguiseMe;
+import com.github.wickoo.disguiseme.handlers.GUIHandler;
 import com.github.wickoo.disguiseme.packetwrappers.WrapperPlayServerEntityDestroy;
 import com.github.wickoo.disguiseme.packetwrappers.WrapperPlayServerNamedEntitySpawnOld;
 import com.github.wickoo.disguiseme.packetwrappers.WrapperPlayServerPlayerInfo;
@@ -28,6 +29,7 @@ public class DisguiseHandler_Old extends DisguiseHandler {
 
     private DisguiseMe plugin;
     private ProtocolManager manager;
+    private GUIHandler guiHandler;
 
     private Map<UUID, Disguise> disguisedPlayers;
     private Map<String, Disguise> cachedProfiles;
@@ -38,6 +40,7 @@ public class DisguiseHandler_Old extends DisguiseHandler {
     public DisguiseHandler_Old(DisguiseMe plugin, ProtocolManager manager) {
         this.plugin = plugin;
         this.manager = manager;
+        this.guiHandler = new GUIHandler(this);
         this.disguisedPlayers = new HashMap<>();
         cachedProfiles = new HashMap<>();
         inv = Bukkit.createInventory(null, 36, Utils.chat("&b&lCurrent Disguised Players"));
@@ -51,10 +54,11 @@ public class DisguiseHandler_Old extends DisguiseHandler {
     public void clearDisguiseSkin (Player player) { super.clearDisguiseSkin(player); }
 
     @Override
-    public void initiateDisguise(Player disguisedPlayer) {
+    public void updateDisguise(Player disguisedPlayer) {
 
         setDisguiseSkin(disguisedPlayer);
-        setDisguiseName(disguisedPlayer);
+        Disguise disguise = getDisguisedPlayer(disguisedPlayer.getUniqueId());
+        setPlayerName(disguisedPlayer, disguise.getDisguisedName());
         disguisedPlayer.setDisplayName(getDisguisedPlayers().get(disguisedPlayer.getUniqueId()).getDisguisedName());
 
         WrapperPlayServerPlayerInfo serverInfoRemove = new WrapperPlayServerPlayerInfo();
@@ -128,7 +132,8 @@ public class DisguiseHandler_Old extends DisguiseHandler {
     public void clearDisguise (Player disguisedPlayer) {
 
         final WrappedGameProfile oldDisguisedProfile = getDisguisedProfile(disguisedPlayer);
-        clearDisguisedName(disguisedPlayer);
+        Disguise disguise = getDisguisedPlayer(disguisedPlayer.getUniqueId());
+        setPlayerName(disguisedPlayer, disguise.getActualName());
         clearDisguiseSkin(disguisedPlayer);
         disguisedPlayer.setDisplayName(getDisguisedPlayers().get(disguisedPlayer.getUniqueId()).getActualName());
 
@@ -216,24 +221,12 @@ public class DisguiseHandler_Old extends DisguiseHandler {
     }
 
     @Override
-    public void setDisguiseName (Player player) { super.setDisguiseName(player); }
-
-    @Override
-    public void clearDisguisedName (Player player) { super.clearDisguisedName(player); }
-
-    @Override
-    public void openDisguisedInv (Player player) { super.openDisguisedInv(player); }
-
-    @Override
-    public void openCachedInv (Player player) { super.openCachedInv(player); }
+    public void setPlayerName (Player player, String name) { super.setPlayerName(player, name); }
 
     @Override
     public void setCachedDisguise(String name, Player player) {
         super.setCachedDisguise(name, player);
     }
-
-    @Override
-    public void asyncDisguise(Player disguiseTarget, UUID disguisedUUID, UUID actualUUID, String disguisedName, String actualName) { super.asyncDisguise(disguiseTarget, disguisedUUID, actualUUID, disguisedName, actualName); }
 
     @Override
     public void setSkin (SkullMeta meta, String texture) {
@@ -286,4 +279,7 @@ public class DisguiseHandler_Old extends DisguiseHandler {
 
     @Override
     public Inventory getCachedInv () { return cached; }
+
+    @Override
+    public GUIHandler getGUIHandler () { return guiHandler; }
 }

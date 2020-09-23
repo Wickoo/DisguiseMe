@@ -1,12 +1,13 @@
 package com.github.wickoo.disguiseme.commands;
 
+import com.github.wickoo.disguiseme.Disguise;
 import com.github.wickoo.disguiseme.DisguiseMe;
 import com.github.wickoo.disguiseme.util.Utils;
 import com.github.wickoo.disguiseme.versions.DisguiseHandler;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @SuppressWarnings("deprecation")
 public class SelfCMD implements CommandManager {
@@ -39,17 +40,26 @@ public class SelfCMD implements CommandManager {
             return;
         }
 
-        String actualName = player.getName();
+        String actualName;
+        UUID playerUUID = player.getUniqueId();
         String disguisedName = args[1];
-        UUID disguisedUUID = Bukkit.getOfflinePlayer(disguisedName).getUniqueId();
 
-        if (disguiseHandler.getCachedProfiles().containsKey(disguisedName)) {
-            disguiseHandler.setCachedDisguise(disguisedName, player);
-            return;
+        if (disguiseHandler.isDisguised(player.getUniqueId())) actualName = disguiseHandler.getDisguisedPlayer(playerUUID).getActualName();
+        else actualName = player.getName();
 
-        }
+        CompletableFuture<Disguise> completableFuture = CompletableFuture.supplyAsync(() -> Disguise.buildDisguise(playerUUID, actualName, disguisedName)).thenApply(disguise -> {
 
-        disguiseHandler.asyncDisguise(player, disguisedUUID, player.getUniqueId(), disguisedName, actualName);
+            if (disguise == null) {
+                player.sendMessage(Utils.chat("&c&lERROR! &7The player &c" + disguisedName + " &7does not exist"));
+                return null;
+            }
+
+            disguiseHandler.registerDisguise(player, disguise);
+            disguiseHandler.updateDisguise(player);
+            player.sendMessage(Utils.chat("&b&lSUCCESS! &7You are now disguised as &b" + disguisedName));
+            return disguise;
+
+        });
 
     }
 

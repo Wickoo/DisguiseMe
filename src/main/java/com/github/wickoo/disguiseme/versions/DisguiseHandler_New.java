@@ -3,6 +3,7 @@ package com.github.wickoo.disguiseme.versions;
 import com.comphenix.protocol.ProtocolManager;
 import com.github.wickoo.disguiseme.Disguise;
 import com.github.wickoo.disguiseme.DisguiseMe;
+import com.github.wickoo.disguiseme.handlers.GUIHandler;
 import com.github.wickoo.disguiseme.util.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -17,6 +18,7 @@ public class DisguiseHandler_New extends DisguiseHandler {
 
     private DisguiseMe plugin;
     private ProtocolManager manager;
+    private GUIHandler guiHandler;
 
     private Map<UUID, Disguise> disguisedPlayers;
     private Map<String, Disguise> cachedProfiles;
@@ -27,6 +29,7 @@ public class DisguiseHandler_New extends DisguiseHandler {
     public DisguiseHandler_New(DisguiseMe plugin, ProtocolManager manager) {
         this.plugin = plugin;
         this.manager = manager;
+        this.guiHandler = new GUIHandler(this);
         this.disguisedPlayers = new HashMap<>();
         cachedProfiles = new HashMap<>();
         inv = Bukkit.createInventory(null, 36, Utils.chat("&b&lCurrent Disguised Players"));
@@ -40,30 +43,18 @@ public class DisguiseHandler_New extends DisguiseHandler {
     public void clearDisguiseSkin (Player player) { super.clearDisguiseSkin(player); }
 
     @Override
-    public void initiateDisguise(Player disguisedPlayer) { super.initiateDisguise(disguisedPlayer); }
+    public void updateDisguise(Player disguisedPlayer) { super.updateDisguise(disguisedPlayer); }
 
     @Override
     public void clearDisguise (Player disguisedPlayer) { super.clearDisguise(disguisedPlayer); }
 
     @Override
-    public void setDisguiseName (Player player) { super.setDisguiseName(player); }
-
-    @Override
-    public void clearDisguisedName (Player player) { super.clearDisguisedName(player); }
-
-    @Override
-    public void openDisguisedInv (Player player) { super.openDisguisedInv(player); }
-
-    @Override
-    public void openCachedInv (Player player) { super.openCachedInv(player); }
+    public void setPlayerName (Player player, String name) { super.setPlayerName(player, name); }
 
     @Override
     public void setCachedDisguise(String name, Player player) {
         super.setCachedDisguise(name, player);
     }
-
-    @Override
-    public void asyncDisguise(Player disguiseTarget, UUID disguisedUUID, UUID actualUUID, String disguisedName, String actualName) { super.asyncDisguise(disguiseTarget, disguisedUUID, actualUUID, disguisedName, actualName); }
 
     @Override
     public void setSkin (SkullMeta meta, String texture) {
@@ -116,4 +107,7 @@ public class DisguiseHandler_New extends DisguiseHandler {
 
     @Override
     public Inventory getCachedInv () { return cached; }
+
+    @Override
+    public GUIHandler getGUIHandler () { return guiHandler; }
 }

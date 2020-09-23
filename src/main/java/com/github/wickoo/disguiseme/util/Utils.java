@@ -12,6 +12,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -32,11 +33,30 @@ public class Utils {
 
     public static List<String> supportedVersions = Arrays.asList("1.9","1.10","1.11","1.12","1.13","1.14","1.15","1.16","1.17");
 
+    public static boolean isSupported () {
+
+        for (String s : supportedVersions) {
+
+            Bukkit.broadcastMessage(s);
+            Bukkit.broadcastMessage(getPackageVersion());
+
+            if (Bukkit.getVersion().contains(s)) {
+
+                return true;
+
+            }
+
+        }
+
+        return false;
+
+    }
+
     public static String chat (String s) {
         return ChatColor.translateAlternateColorCodes('&',s);
     }
 
-    public static String[] fetch(UUID uuid, Player player) {
+    public static String[] fetch(UUID uuid) {
 
         String uuidFixed = uuid.toString().replace("-", "");
 
@@ -52,7 +72,6 @@ public class Utils {
 
         } catch (IOException e) {
             System.err.println("Could not get skin data from session servers!");
-            player.sendMessage(Utils.chat("&c&lERROR! &7Server received too many requests!"));
             e.printStackTrace();
             return new String[] {null};
         } catch (IllegalStateException e) {
@@ -67,7 +86,7 @@ public class Utils {
 
         if (version.contains("1.8")) {
             return new DisguiseHandler_Old(plugin, manager);
-        } if (supportedVersions.contains(version)) {
+        } if (isSupported()) {
             return new DisguiseHandler_New(plugin, manager);
         } else {
             return null;
@@ -121,6 +140,16 @@ public class Utils {
             return null;
         }
 
+    }
+
+    public static ItemStack buildStack (Material material, String name, String... lores) {
+        List<String> lore = Arrays.asList(lores);
+        ItemStack itemStack = new ItemStack(material);
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        itemMeta.setLore(lore);
+        itemMeta.setDisplayName(chat(name));
+        itemStack.setItemMeta(itemMeta);
+        return itemStack;
     }
 
 }

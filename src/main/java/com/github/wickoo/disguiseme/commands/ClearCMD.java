@@ -34,19 +34,21 @@ public class ClearCMD implements CommandManager {
         if (args.length == 2) {
 
             Player targetPlayer = Bukkit.getPlayer(args[1]);
+
             if (targetPlayer == null) {
                 player.sendMessage(Utils.chat("&c&lERROR! &7Player &c " + args[1] + " &7not found!"));
                 return;
             }
 
-            if (!disguiseHandler.isDisguised(player.getUniqueId())) {
+            if (!disguiseHandler.isDisguised(targetPlayer.getUniqueId())) {
                 player.sendMessage(Utils.chat("&c&lERROR! &7Player &c" + args[1] + " &7is not disguised!"));
                 return;
             }
 
-            disguiseHandler.clearDisguise(player);
-            disguiseHandler.removeDisguisedPlayer(player.getUniqueId());
+            disguiseHandler.clearDisguise(targetPlayer);
+            disguiseHandler.removeDisguisedPlayer(targetPlayer.getUniqueId());
             player.sendMessage(Utils.chat("&b&lSUCCESS! &7Player &b" + args[1] + " &7is no longer disguised!"));
+            targetPlayer.sendMessage(Utils.chat("&b&lSUCCESS! &b" + player.getName() + " &7has removed your disguise"));
             return;
 
         }
@@ -57,6 +59,8 @@ public class ClearCMD implements CommandManager {
         }
 
         disguiseHandler.clearDisguise(player);
+        disguiseHandler.removeDisguisedPlayer(player.getUniqueId());
+        player.sendMessage(Utils.chat("&b&lSUCCESS! &7You are no longer disguised"));
     }
 
 }

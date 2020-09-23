@@ -1,5 +1,8 @@
 package com.github.wickoo.disguiseme;
 
+import com.github.wickoo.disguiseme.versions.DisguiseHandler;
+import org.bukkit.Bukkit;
+
 import java.util.UUID;
 
 public class Disguise {
@@ -21,6 +24,31 @@ public class Disguise {
         this.disguisedName = disguisedName;
         this.actualName = actualName;
         this.actualUUID = actualUUID;
+
+    }
+
+    /**
+     *
+     * Must be called async as to not stall server.
+     *
+     *
+     * @param playerUUID
+     * @param playerName
+     * @param disguiseName
+     * @return
+     */
+
+    public static Disguise buildDisguise (UUID playerUUID, String playerName, String disguiseName) {
+
+        UUID disguisedUUID = Bukkit.getOfflinePlayer(disguiseName).getUniqueId();
+        String[] values = DisguiseHandler.getSkinData(disguisedUUID);
+
+        if (values == null) return null;
+
+        Disguise disguise = new Disguise(disguisedUUID, disguiseName, playerName, playerUUID);
+        disguise.setDisguisedTexture(values[0]);
+        disguise.setDisguisedSignature(values[1]);
+        return disguise;
 
     }
 
